@@ -7,6 +7,7 @@
 #include <iostream>
 using namespace std;
 
+
 void generateDatabase(student_database * db, int cnt) {
     db -> count = 0;
 

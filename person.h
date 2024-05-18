@@ -1,6 +1,7 @@
 #ifndef __person_h__
 #define __person_h__
 #include "grades.h"
+
 using namespace std;
 
 typedef struct {

@@ -1,5 +1,6 @@
 #ifndef __grades_h__
 #define __grades_h__
+
 using namespace std;
 
 typedef struct {
