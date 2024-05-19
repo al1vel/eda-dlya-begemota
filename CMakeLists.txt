@@ -4,7 +4,7 @@ project(kp6)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(kp6 main.cpp
+add_executable(kp6 kp6.cpp
         person.h
         grades.h
         student_database.h
