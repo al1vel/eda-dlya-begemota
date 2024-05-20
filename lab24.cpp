@@ -6,7 +6,6 @@ char ch;
 int counmin = 0;
 int f = 0;
 
-typedef struct node node;
 struct node {
     char data;
     node* left;
@@ -14,7 +13,7 @@ struct node {
 };
 
 void printtree(node* t) {
-    static int l = 0;
+    int l = 0;
     l++;
     if (t)
     {
