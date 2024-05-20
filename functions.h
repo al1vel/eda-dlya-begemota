@@ -9,8 +9,11 @@ using namespace std;
 
 
 void generateDatabase(student_database * db, int cnt) {
+    FILE* binary_file = fopen("db.txt", "wb");
+    if (binary_file == nullptr) {
+        perror("Error opening file");
+    }
     db -> count = 0;
-
     // Массивы для генерации случайных значений
     const char* last_names[] = { "Ivanov", "Petrov", "Sidorov", "Gusev", "Mironov" };
     const char* all_initials[] = { "A.B", "H.E", "A.P", "T.A", "C.B" };
@@ -49,6 +52,7 @@ void generateDatabase(student_database * db, int cnt) {
         if (db -> count < 20) {
             db -> students[db -> count++] = st;
         }
+        fprintf(binary_file, "%s", st.last_name);
     }
 }
 
