@@ -5,38 +5,32 @@
 #include "student_database.h"
 #include <map>
 #include <iostream>
+#include <fstream>
+
 using namespace std;
+
+//std::ostream& operator << (std::ostream& os, const Point& p);
+//std::istream& operator >> (std::istream& in, Point& p);
 
 
 void generateDatabase(student_database * db, int cnt) {
-    FILE* binary_file = fopen("db.txt", "wb");
-    if (binary_file == nullptr) {
-        perror("Error opening file");
+    ofstream outfile ("D://db.bin", std::ios::out | std::ios::binary);
+    if (outfile.is_open()) {
+        cout << '\n' << "FILE WAS SUCCESSFULLY OPENED" << '\n';
     }
     db -> count = 0;
-    // Массивы для генерации случайных значений
+
     const char* last_names[] = { "Ivanov", "Petrov", "Sidorov", "Gusev", "Mironov" };
     const char* all_initials[] = { "A.B", "H.E", "A.P", "T.A", "C.B" };
     const char* genders[] = { "M", "F" };
     const char* all_group_numbers[] = { "114", "115", "103", "107", "109" };
 
-    // Генерация 20 записей
     for (int i = 0; i < cnt; i++) {
         person st;
-
-        // Фамилия
         strcpy(st.last_name, last_names[rand() % 5]);
-
-        // Инициалы
         strcpy(st.initials, all_initials[rand() % 5]);
-
-        // Пол
         st.gender = genders[rand() % 2];
-
-        // Группа
         strcpy(st.group_number, all_group_numbers[rand() % 5]);
-
-        // Оценки
         st.student_grades.mathematical_analysis = rand() % 4 + 2;
         st.student_grades.computer_science = rand() % 4 + 2;
         st.student_grades.mathematical_logic = rand() % 4 + 2;
@@ -52,8 +46,22 @@ void generateDatabase(student_database * db, int cnt) {
         if (db -> count < 20) {
             db -> students[db -> count++] = st;
         }
-        fprintf(binary_file, "%s", st.last_name);
+        outfile.write(st.last_name, sizeof(st.last_name));
+        outfile.write(st.initials, sizeof(st.initials));
+        outfile.write(st.gender, sizeof(st.gender));
+        outfile.write(st.group_number, sizeof(st.group_number));
+        outfile.write((char*)&st.student_grades.mathematical_analysis, sizeof(st.student_grades.mathematical_analysis));
+        outfile.write((char*)&st.student_grades.computer_science, sizeof(st.student_grades.computer_science));
+        outfile.write((char*)&st.student_grades.mathematical_logic, sizeof(st.student_grades.mathematical_logic));
+        outfile.write((char*)&st.student_grades.linear_algebra, sizeof(st.student_grades.linear_algebra));
+        outfile.write((char*)&st.student_grades.python_test, sizeof(st.student_grades.python_test));
+        outfile.write((char*)&st.student_grades.english, sizeof(st.student_grades.english));
+        outfile.write((char*)&st.student_grades.avg, sizeof(st.student_grades.avg));
+        const char* a = new char('\n');
+        outfile.write(a, sizeof(a));
     }
+    outfile.close();
+    cout << '\n' << "FILE CLOSED" << '\n';
 }
 
 void printDatabase(const student_database * db) {
@@ -88,12 +96,12 @@ void find_min_avg(const student_database &db) {
     }
     int max_losers = 0;
     string loser_gr;
-    for (auto el : group_data) {
+    for (const auto& el : group_data) {
         if (el.second > max_losers) {
             max_losers = el.second;
         }
     }
-    for (auto el : group_data) {
+    for (const auto& el : group_data) {
         if (el.second == max_losers) {
             loser_gr = el.first;
         }
