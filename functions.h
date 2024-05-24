@@ -6,17 +6,12 @@
 #include <map>
 #include <iostream>
 #include <fstream>
-
 using namespace std;
-
-//std::ostream& operator << (std::ostream& os, const Point& p);
-//std::istream& operator >> (std::istream& in, Point& p);
-
 
 void generateDatabase(student_database * db, int cnt) {
     ofstream outfile ("D://db.bin", std::ios::out | std::ios::binary);
     if (outfile.is_open()) {
-        cout << '\n' << "FILE WAS SUCCESSFULLY OPENED" << '\n';
+        cout << "FILE WAS SUCCESSFULLY OPENED" << '\n';
     }
     db -> count = 0;
 
@@ -61,7 +56,7 @@ void generateDatabase(student_database * db, int cnt) {
         outfile.write(a, sizeof(a));
     }
     outfile.close();
-    cout << '\n' << "FILE CLOSED" << '\n';
+    cout << "FILE CLOSED" << '\n';
 }
 
 void printDatabase(const student_database * db) {

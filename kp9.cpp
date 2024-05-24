@@ -27,8 +27,8 @@ void shakerSort(Record mass[], int count) {
                 }
             }
         }
-        right--; // сдвигаем правую границу на предыдущий элемент
-        for (int i = right; i > left; i--) { //двигаемся справа налево
+        right--;
+        for (int i = right; i > left; i--) {
             if (mass[i - 1].key_int > mass[i].key_int) {
                 Record t = mass[i];
                 mass[i] = mass[i-1];
@@ -91,14 +91,9 @@ int main() {
     for (int i = 0; i < n; ++i) {
         fscanf(file, "%ld%c,%[^\n]", &records[i].key_int, &records[i].key_ch, records[i].text);
     }
-//    while ((fscanf(file, "%lf%c,%[^\n]", &records[n].key_int, &records[n].key_ch, records[n].text)) != EOF) {
-//        n++;
-//    }
     fclose(file);
-
     printf("Original array:\n");
     printArray(records, n);
-
     shakerSort(records, n);
     printf("Sorted array:\n");
     printArray(records, n);
