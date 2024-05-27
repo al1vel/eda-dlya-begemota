@@ -131,14 +131,4 @@ for key, val in graph.items():
 coloring = graph_coloring(graph, deg_5)
 str_coloring = int_col_to_str_col(coloring)
 print(f'COLORING: {str_coloring}')
-
-# Проверяем правильность раскраски:
-correct_coloring = True
-for key, val in graph.items():
-    for v in val:
-        if coloring[key] == coloring[v]:
-            correct_coloring = False
-            break
-print("Correct check:", correct_coloring)
-
 draw_colored(graph, pos, str_coloring)
