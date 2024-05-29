@@ -12,7 +12,7 @@ def graph_coloring(gr, deg):
             color += 1
     else:
         n = deg[0]
-        deg.pop()
+        deg.pop(0)
         adjacent = gr[n]  # cохраняем вершины, соединённые с n
         for vertex in adjacent:
             vertex = vertex
@@ -120,7 +120,7 @@ def draw_colored(gr, p, col_dict):
 
 # START. Инициализация графа матрицей смежности.
 graph = initializing_graph()
-pos = {1: (-4, 0), 2: (3, 10), 3: (10, 0), 4: (3, 1.3), 5: (1, 5), 6: (5, 5), 7: (3, 3.5)}
+pos = {1: (-4, 0), 2: (3, 10), 3: (10, 0), 4: (3, 1.3), 5: (1, 5), 6: (5, 5), 7: (3, 3.5), 8: (12, 5.5), 9: (-6, 5.5)}
 draw_original(graph, pos)
 
 # Recoloring
@@ -128,6 +128,7 @@ deg_5 = []  # список вершин со степенями не больш�
 for key, val in graph.items():
     if len(val) <= 5:
         deg_5.append(key)
+print(deg_5)
 coloring = graph_coloring(graph, deg_5)
 str_coloring = int_col_to_str_col(coloring)
 print(f'COLORING: {str_coloring}')
