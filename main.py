@@ -48,6 +48,7 @@ def color_one_node(gr, n, col_dict: dict, p):
 
 def initializing_graph():
     # Initialising graph
+    print("Введите матрицу смежности")
     gr = dict()
     line_ind = 1
     for line in stdin:
