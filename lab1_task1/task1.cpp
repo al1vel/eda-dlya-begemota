@@ -9,7 +9,8 @@ enum ret_type_t {
 	ERROR_NOT_A_NUM,
 	ERROR_NEG_NUM,
 	ERROR_INVALID_NUM,
-	ERROR_NUMBER_TOO_BIG
+	ERROR_NUMBER_TOO_BIG,
+	NO_SUCH_NUMBERS
 };
 
 typedef ret_type_t(*callback)(char*);
@@ -37,14 +38,15 @@ int toInt(char* argv) {
 	if (neg_flag) {
 		res *= -1;
 	}
-	printf("%d\n", res);
+	//printf("%d\n", res);
 	return res;
 }
 
 ret_type_t funcForH (char* argv) {
 	int num = toInt(argv);
 	if (num < 0) return ERROR_NEG_NUM;
-	if (num > 100) printf("NO SUCH NUMBERS\n");
+	if (num == 0) return ERROR_INVALID_NUM;
+	if (num > 100) return NO_SUCH_NUMBERS;
 	for (int i = num; i <= 100; ++i) {
 		if (i % num == 0) {
 			printf("%d\n", i);
@@ -148,14 +150,16 @@ int find_flag(char* arg, const char** flags, int size) {
 ret_type_t validateNumber(char* argv) {
 	if (!(argv)) return ERROR_NOT_A_NUM;
 	if (*argv == '-') argv++;
-
+	int first = *argv - '0';
 	int cnt = 0;
 	while (*argv) {
 		if (!isdigit(*argv)) return ERROR_NOT_A_NUM;
 		argv++;
 		cnt++;
 	}
-	if (cnt >= 10) return ERROR_NUMBER_TOO_BIG;
+	//printf("%d %d", cnt, first);
+	if (cnt >= 11) return ERROR_NUMBER_TOO_BIG;
+	if (cnt >= 10 and first > 2) return ERROR_NUMBER_TOO_BIG;
 	return SUCCESS;
 }
 
@@ -166,6 +170,7 @@ void ValidateCode(int code) {
 		case ERROR_NEG_NUM: printf("ERROR_NEG_NUM\n"); break;
 		case ERROR_INVALID_NUM: printf("ERROR_INVALID_NUM\n"); break;
 		case ERROR_NUMBER_TOO_BIG: printf("ERROR_NUMBER_TOO_BIG\n"); break;
+		case NO_SUCH_NUMBERS: printf("NO_SUCH_NUMBERS\n"); break;
 		default: printf("ERROR_UNKNOWN\n"); break;
 	}
 }
