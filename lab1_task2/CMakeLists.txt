@@ -1,0 +1,1 @@
+add_executable(lab1_task2 task2.cpp)
