@@ -129,16 +129,6 @@ double funcForEq3 (double n) {
 }
 
 double funcForLim4 (double x) {
-    // static int flag = 0;
-    // double res;
-    // if (flag == 0) {
-    //     res = -0.5 - (-0.5 / 2 * -0.5) + 1;
-    //     flag = 1;
-    // } else {
-    //     res = n - (n * n / 2) + 1;
-    // }
-    // //printf("%lf, %lf\n", res, n);
-    // return res;
     static double res;
     if (x == 1) res = -0.5;
     res = res - res * res / 2 + 1;
@@ -159,18 +149,21 @@ double limit(const double EPS, const callback func) {
     return cur_val;
 }
 
-// double limit4(const double EPS, const callback func) {
-//     double val;
-//     double cur_val;
-//     double x = 1;
-//     do {
-//         cur_val = func(x);
-//         x = func(x);
-//         val = func(x);
-//         printf("%.18f %.18f\n", val, cur_val);
-//     } while ((fabs(cur_val - val)) > EPS);
-//     return cur_val;
-// }
+double limit4(const double EPS, const callback func) {
+    double val;
+    double cur_val;
+    double prev_val;
+    double x = 1;
+    do {
+        prev_val = func(x);
+        x += 1;
+        val = func(x);
+        x += 1;
+        cur_val = func(x);
+        //printf("%.20f %.20f %.20f\n", prev_val, val, cur_val);
+    } while (((fabs(cur_val - val)) > EPS) and (fabs(cur_val - prev_val) > EPS));
+    return cur_val;
+}
 
 double summ (const double start, const double EPS, const callback func, double multiplier) {
     double x = start;
@@ -270,7 +263,7 @@ int main(const int argc, char* argv[]) {
     printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     //COUNT sqrt2
-    res_lim = limit(eps, &funcForLim4);
+    res_lim = limit4(eps, &funcForLim4);
     printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     printf("\n");return 0;
