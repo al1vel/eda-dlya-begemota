@@ -86,20 +86,17 @@ float limit(const float EPS, const callback func) {
 }
 
 float summ (const float start, const float EPS, const callback func) {
-    printf("hui");
-    float val;
-    float cur_val;
     float x = start;
     float summ = 0;
     float cur_summ = 0;
-    do {
-        cur_val = func(x);
 
+    do {
+        cur_summ = summ;
+        summ += func(x);
         x += 1;
-        val = func(x);
-        printf("%f %f\n", val, cur_val);
-    } while ((fabs(cur_val - val)) > EPS);
-    return cur_val;
+    } while ((fabs(cur_summ - summ)) > EPS);
+
+    return summ;
 }
 
 int main(const int argc, char* argv[]) {
@@ -119,10 +116,11 @@ int main(const int argc, char* argv[]) {
     if (ret != VALID) {
         ValidateCode(ret);
     }
-    printf("Count e");
+    printf("Count e\n");
+    printf("%6s, %6s, %6s", "");
     float res_lim = limit(eps, &funcForLim1);
     float res_sum = summ(0, eps, &funcForSumm1);
-    printf("Result: %5f %5f", res_lim, res_sum);
+    printf("%5f %5f", res_lim, res_sum);
 
     return 0;
 }
