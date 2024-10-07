@@ -21,8 +21,20 @@ double fact(double n) {
     }
 }
 
+// double fact (double n) {
+//     if (n == 0) return 1.0;
+//     double res = 1;
+//     while (n > 0) {
+//         res *= n;
+//         n--;
+//     }
+//     return res;
+// }
+
 double c(double k, double m) {
-    return fact(m) / (fact(k) * fact(m - k));
+    double res = fact(m) / (fact(k) * fact(m - k));
+    //printf("%lf\n", res);
+    return res;
 }
 
 CODES ValidateEps(const char* argv) {
@@ -45,7 +57,7 @@ CODES ValidateEps(const char* argv) {
     if (dotCnt > 1) {
         return NOT_A_NUM;
     }
-    if (cnt > 18) {
+    if (cnt > 16) {
         return NUM_TOO_LARGE;
     }
     return VALID;
@@ -156,7 +168,12 @@ double funcForLim5 (double m) {
         double up = (k % 2 == 0) ? 1 : -1;
         res += (c(k, m) * (up / k) * log(fact(k)));
     }
-    //printf("%lf\n", res);
+    //printf("%.20lf %lf\n", res, m);
+    return res;
+}
+
+double funcForSum5 (double k) {
+    double res = (1 / (pow(floor(sqrt(k)), 2)) - (1 / k));
     return res;
 }
 
@@ -169,7 +186,7 @@ double limit(const double EPS, const callback func) {
         cur_val = func(x);
         x += 1;
         val = func(x);
-        printf("%.20f %.20f\n", val, cur_val);
+        // printf("%.20f %.20f\n", val, cur_val);
     } while ((fabs(cur_val - val)) > EPS);
     return cur_val;
 }
@@ -185,7 +202,7 @@ double limit4(const double EPS, const callback func) {
         val = func(x);
         x += 1;
         cur_val = func(x);
-        printf("%.20f %.20f %.20f\n", prev_val, val, cur_val);
+        //printf("%.20f %.20f %.20f\n", prev_val, val, cur_val);
     } while (((fabs(cur_val - val)) > EPS) and (fabs(cur_val - prev_val) > EPS));
     return cur_val;
 }
@@ -206,7 +223,7 @@ double summ (const double start, const double EPS, const callback func, double m
         x += 1;
         //printf("%lf, %lf\n", val, prev);
     } while (fabs(fabs(func(x) - fabs(prev))) > EPS);
-
+    //printf("%lf\n", summ * multiplier);
     return summ * multiplier;
 }
 
@@ -285,31 +302,32 @@ int main(const int argc, char* argv[]) {
     printf("==============================\n");
 
     //COUNT E
-    // res_lim = limit(eps, &funcForLim1);
-    // res_sum = summ(0, eps, &funcForSumm1, 1);
-    // res_eq = equation(eps, &funcForEq1, 1, 4);
-    // printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
+    res_lim = limit(eps, &funcForLim1);
+    res_sum = summ(0, eps, &funcForSumm1, 1);
+    res_eq = equation(eps, &funcForEq1, 1, 4);
+    printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     // //COUNT PI
-    // res_lim = limit(eps, &funcForLim2);
-    // res_sum = summ(1, eps, &funcForSum2, 4);
-    // res_eq = equation(eps, &funcForEq2, 2, 4);
-    // printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
+    res_lim = limit(eps, &funcForLim2);
+    res_sum = summ(1, eps, &funcForSum2, 4);
+    res_eq = equation(eps, &funcForEq2, 2, 4);
+    printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     // //COUNT ln2
-    // res_lim = limit(eps, &funcForLim3);
-    // res_sum = summ(1, eps, &funcForSum3, 1);
-    // res_eq = equation(eps, &funcForEq3, 0, 2);
-    // printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
+    res_lim = limit(eps, &funcForLim3);
+    res_sum = summ(1, eps, &funcForSum3, 1);
+    res_eq = equation(eps, &funcForEq3, 0, 2);
+    printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     //COUNT sqrt2
-    // res_lim = limit4(eps, &funcForLim4);
-    // res_sum = mult(2, eps, funcForSum4);
-    // res_eq = equation(eps, &funcForEq4, 0, 2);
-    // printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
+    res_lim = limit4(eps, &funcForLim4);
+    res_sum = mult(2, eps, funcForSum4);
+    res_eq = equation(eps, &funcForEq4, 0, 2);
+    printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     //COUNT GAMMA
     res_lim = limit(eps, &funcForLim5);
+    res_sum = summ(2, eps, funcForSum5, 1) - (pow(3.1415926535, 2) / 6);
     printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     printf("\n");return 0;
