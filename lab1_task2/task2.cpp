@@ -12,6 +12,7 @@ enum CODES {
 };
 
 typedef double(*callback)(double);
+typedef double(*callback2)(double, double);
 
 double fact(double n) {
     if (n == 0) {
@@ -19,6 +20,18 @@ double fact(double n) {
     } else {
         return n * fact(n - 1);
     }
+}
+
+int is_prime(int x) {
+    if (x < 2) return 0;
+    if (x == 2) return 1;
+    if (x % 2 == 0) return 0;
+    for (int i = 3; i * i <= x; i += 2) {
+        if (x % i == 0) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 // double fact (double n) {
@@ -57,7 +70,7 @@ CODES ValidateEps(const char* argv) {
     if (dotCnt > 1) {
         return NOT_A_NUM;
     }
-    if (cnt > 16) {
+    if (cnt > 9) {
         return NUM_TOO_LARGE;
     }
     return VALID;
@@ -172,8 +185,32 @@ double funcForLim5 (double m) {
     return res;
 }
 
+double funcForLim52 (double n) {
+    double res = 0;
+    for (int k = 1; k <= n; k++) {
+        res += 1 / (double)k;
+    }
+    res -= log(n);
+    return res;
+}
+
 double funcForSum5 (double k) {
     double res = (1 / (pow(floor(sqrt(k)), 2)) - (1 / k));
+    return res;
+}
+
+double funcForLimInGamma3 (double t) {
+    double res = log(t);
+    for (int p = 1; p <= t; p++) {
+        if (is_prime(p)) {
+            res *= (((double)p - 1) / (double)p);
+        }
+    }
+    return res;
+}
+
+double funcForEq5 (double x, double lim_val) {
+    double res = pow(2.7182818284, -x) - lim_val;
     return res;
 }
 
@@ -186,9 +223,28 @@ double limit(const double EPS, const callback func) {
         cur_val = func(x);
         x += 1;
         val = func(x);
-        // printf("%.20f %.20f\n", val, cur_val);
+        //printf("%.20f %.20f\n", val, cur_val);
     } while ((fabs(cur_val - val)) > EPS);
     return cur_val;
+}
+
+double proizvedeniye(double cur_proizv, int t){
+    if (is_prime(t)){
+        cur_proizv = cur_proizv * (t - 1) / t;
+    }
+    return cur_proizv;
+}
+
+double funcForGammaEq(double ep) {
+    int t = 2;
+    double proizv = 0.5, res = 0, gm;
+    do {
+        res = log(t) * proizv;
+        t++;
+        proizv = proizvedeniye(proizv, t) ;
+    } while (fabs(res - (log(t + 1) * proizv)) > ep);
+    gm = -log(res);
+    return gm;
 }
 
 double limit4(const double EPS, const callback func) {
@@ -259,6 +315,22 @@ double equation(const double EPS, const callback func, double l, double r) {
     return l;
 }
 
+double equationGamma(const double EPS, const callback2 func, double l, double r, double lim_val) {
+    double x = (l + r) / 2;
+    double prev = 100;
+    while (fabs(func(x, lim_val) - prev) > EPS) {
+        //printf("%-5f %-5f %-5f %.10f\n", l, r, x, func(x, lim_val));
+        if (func(x, lim_val) < 0) {
+            r = x;
+        } else {
+            l = x;
+        }
+        prev = func(x, lim_val);
+        x = (l + r) / 2;
+    }
+    return l;
+}
+
 double mult(const double start, const double EPS, const callback func) {
     double x = start;
     double res = 1;
@@ -275,6 +347,7 @@ double mult(const double start, const double EPS, const callback func) {
 }
 
 int main(const int argc, char* argv[]) {
+    //printf("%d %d %d %d %d\n", is_prime(0), is_prime(1), is_prime(2), is_prime(3), is_prime(4));
     if (argc != 2) {
         printf("Epsilon must be inputted once\n");
         return -1;
@@ -326,8 +399,15 @@ int main(const int argc, char* argv[]) {
     printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     //COUNT GAMMA
-    res_lim = limit(eps, &funcForLim5);
+    res_lim = limit(eps, &funcForLim52);
     res_sum = summ(2, eps, funcForSum5, 1) - (pow(3.1415926535, 2) / 6);
+
+    double limitForGamma3 = limit(eps * 10000, &funcForLimInGamma3);
+    //printf("%lf\n", limitForGamma3);
+    res_eq = equationGamma(eps, funcForEq5, 0, 1, limitForGamma3);
+    //res_eq = funcForGammaEq(eps);
+
+
     printf("%-8f | %-8f | %-8f\n", res_lim, res_sum, res_eq);
 
     printf("\n");return 0;
