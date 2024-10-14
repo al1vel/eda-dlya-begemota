@@ -10,7 +10,10 @@ enum CODES {
     EPS_TOO_BIG,
     NULL_EPS,
     X_NOT_A_NUM,
-    X_TOO_LARGE
+    X_TOO_LARGE,
+    DIVERGES,
+    SUCCESS,
+    NULL_X
 };
 
 typedef double(*callback)(double, double);
@@ -58,6 +61,9 @@ void ValidateCode(CODES code) {
         case NULL_EPS: printf("EPS can't be null\n"); break;
         case X_NOT_A_NUM: printf("X is not a num\n"); break;
         case X_TOO_LARGE: printf("X is too large\n"); break;
+        case DIVERGES: printf("Func diverges\n"); break;
+        case SUCCESS: break;
+        case NULL_X: printf("X is null\n"); break;
         default: printf("Unknown error code\n"); break;
     }
 }
@@ -70,6 +76,16 @@ CODES ValidateEpsNum (double eps) {
         return EPS_TOO_BIG;
     } else if (eps == 0.0) {
         return NULL_EPS;
+    }
+    return VALID;
+}
+
+CODES ValidateXNum (double x) {
+    //printf("%lf\n", eps);
+    if (x < 0) {
+        return NEG_NUM;
+    } else if (x == 0.0) {
+        return NULL_X;
     }
     return VALID;
 }
@@ -100,18 +116,49 @@ CODES ValidateX(const char* argv) {
     return VALID;
 }
 
-double summ (const double start, const double EPS, const callback func, const double x) {
-    double n = start;
-    double val = 1, summ = val;
+// void PrintRes(double res) {
+//     if (res == 123.123123123123123) {
+//         printf("The function diverges.\n");
+//     }
+//     else {
+//         printf("%lf\n", res);
+//     }
+// }
 
-    do {
+// double summ (const double start, const double EPS, const callback func, const double x, const double startVal) {
+//     double n = start, val = startVal, summ = val;
+//
+//     do {
+//         n += 1;
+//         val = val * func(n, x);
+//         summ += val;
+//
+//         if (isinf(summ) || isnan(summ)) {
+//             return 123.123123123123123;
+//         }
+//
+//         printf("%lf, %lf, %lf\n", val, func(n, x), summ);
+//     } while (fabs(val) > EPS);
+//     return summ;
+// }
+
+CODES summ1 (const double start, const double EPS, const callback func, const double x, const double startVal) {
+    double n = start, val = startVal, summ = val;
+
+    n += 1;
+    val = val * func(n, x);
+    summ += val;
+
+    for (int i = 0; i < 100000; ++i) {
         n += 1;
         val = val * func(n, x);
         summ += val;
-
-        //printf("%lf, %lf\n", val, func(n, x));
-    } while (fabs(val) > EPS);
-    return summ;
+        if (fabs(val) < EPS) {
+            printf("Result: %lf\n", summ);
+            return SUCCESS;
+        }
+    }
+    return DIVERGES;
 }
 
 double funcForSum1(const double n, const double x) {
@@ -120,23 +167,33 @@ double funcForSum1(const double n, const double x) {
 }
 
 double funcForSum2(const double n, const double x) {
-    double up = ((int)n % 2 == 0) ? 1 : -1;
-    double res = up * pow(x, 2 * n) / fact(2 * n);
+    double res = -(x * x / (2*n - 1) / (2*n));
     return res;
 }
 
 double funcForSum3(const double n, const double x) {
-    double res = pow(3, 3 * n) / fact(3 * n) * pow(fact(n), 3) * pow(x, 2 * n);
+    double res = (((9 * pow(n, 3) * x * x /(3*n - 1)) / (3*n - 2)) / n);
+    return res;
+}
+
+double funcForSum4(const double n, const double x) {
+    double res = (-(2 * n - 1) * x * x / (2 * n));
+    if ((int)n % 2 == 1) {
+        res = -res;
+    }
+    return res;
+}
+
+double funcForStartD(const double x) {
+    double res = -x * x / 2;
     return res;
 }
 
 int main(const int argc, char* argv[]) {
-    double res;
     if (argc != 3) {
         printf("Wrong number of arguments\n");
         return -1;
     }
-
     CODES ret = ValidateEps(argv[1]);
     if (ret != VALID) {
         ValidateCode(ret);
@@ -148,24 +205,29 @@ int main(const int argc, char* argv[]) {
         ValidateCode(ret);
         return -1;
     }
-
     ret = ValidateX(argv[2]);
     if (ret != VALID) {
         ValidateCode(ret);
         return -1;
     }
     const double x = atof(argv[2]);
+    ret = ValidateXNum(x);
+    if (ret != VALID) {
+        ValidateCode(ret);
+        return -1;
+    }
 
-    //printf("%lf %lf\n", eps, x);
+    CODES response = summ1(0, eps, funcForSum1, x, 1);
+    ValidateCode(response);
 
-    res = summ(0, eps, funcForSum1, x);
-    printf("Result for a: %lf\n", res);
+    response = summ1(0, eps, funcForSum2, x, 1);
+    ValidateCode(response);
 
-    res = summ(0, eps, funcForSum2, x);
-    printf("Result for b: %lf\n", res);
+    response = summ1(0, eps, funcForSum3, x, 1);
+    ValidateCode(response);
 
-    res = summ(0, eps, funcForSum3, x);
-    printf("Result for c: %lf\n", res);
+    response = summ1(1, eps, funcForSum4, x, funcForStartD(x));
+    ValidateCode(response);
 
     return 0;
 }
