@@ -5,16 +5,18 @@
 
 enum CODES {
     VALID,
-    NOT_A_NUM,
+    INVALID_INPUT,
     TOO_LARGE,
-    BASE_OUT_OF_RANGE
+    BASE_OUT_OF_RANGE,
+    EMPTY_LINE
 };
 
-void ValidateCode(CODES code) {
+void ValidateCode(const CODES code) {
     switch (code) {
-        case NOT_A_NUM: printf("not a num\n"); break;
+        case INVALID_INPUT: printf("Invalid inputted number\n"); break;
         case TOO_LARGE: printf("too large\n"); break;
         case BASE_OUT_OF_RANGE: printf("base out of range\n"); break;
+        case EMPTY_LINE: printf("empty line\n"); break;
         default: printf("Unknown error code\n"); break;
     }
 }
@@ -25,8 +27,8 @@ CODES Validate(const char* argv) {
         argv++;
     }
     while (*argv != '\0') {
-        if (!isdigit(*argv) and (*argv != '.')) {
-            return NOT_A_NUM;
+        if (!isdigit(*argv) and (!islower(*argv))) {
+            return INVALID_INPUT;
         } else {
             argv++;
             cnt++;
@@ -35,22 +37,40 @@ CODES Validate(const char* argv) {
     if (cnt > 9) {
         return TOO_LARGE;
     }
+    if (cnt == 0) {
+        return EMPTY_LINE;
+    }
     return VALID;
 }
 
-CODES ValidateBase(int base) {
+CODES ValidateBase(const int base) {
     if (base < 2 or base > 36) {
         return BASE_OUT_OF_RANGE;
     }
     return VALID;
 }
 
-void Clear(int i, char ** arr, char *base) {
+void Clear(const int i, char ** arr, const char *base) {
     for (int j = 0; j < i; ++j) {
         free(arr[j]);
     }
     free(arr);
+    //printf("ok");
     delete base;
+}
+
+int FromBaseTo10 (const int base, char *str) {
+    int res = 0;
+    char *p = str;
+    while (*p) {
+        if (isalpha(*p)) {
+            res = res * base + *p++ - 'A' + 10;
+        }
+        else {
+            res = res * base + *p++ - '0';
+        }
+    }
+    return res;
 }
 
 int main() {
@@ -71,10 +91,10 @@ int main() {
 
 
     char ** numArr = NULL, **ptr;
-    char buf[BUFSIZ];
-    int cnt = 0, j, arrSize = 2;
+    char buf[BUFSIZ] = { };
+    int cnt = 0, arrSize = 2;
 
-    numArr = (char**)realloc(numArr, arrSize * sizeof(char*));
+    numArr = (char**)malloc(arrSize * sizeof(char*));
     if (numArr == NULL) {
         printf("Unable to allocate memory for numbers");
         return -1;
@@ -89,10 +109,6 @@ int main() {
         ret = Validate(buf);
         if (ret != VALID) {
             ValidateCode(ret);
-            // for (j = 0; j < i; ++j) {
-            //     free(numArr[j]);
-            // }
-            // free(numArr);
             Clear(cnt, numArr, baseArr);
             return -1;
         }
@@ -101,10 +117,6 @@ int main() {
             arrSize *= 2;
             ptr = (char**)realloc(numArr, arrSize * sizeof(char*));
             if (ptr == NULL) {
-                // for (j = 0; j < i; ++j) {
-                //     free(numArr[j]);
-                // }
-                // free(numArr);
                 printf("Error reallocating memory");
                 Clear(cnt, numArr, baseArr);
                 return -1;
@@ -120,11 +132,10 @@ int main() {
         strcpy(numArr[cnt - 1], buf);
     }
 
-    //печать строк
-    for (j = 0; j < cnt; ++j) {
-        printf("%s\n", numArr[j]);
+    //Обработка строк
+    for (int j = 0; j < cnt; ++j) {
+        printf("%d\n", FromBaseTo10(base, numArr[j]));
     }
-    printf("%d\n", cnt);
 
     //Очистка
     Clear(cnt, numArr, baseArr);
