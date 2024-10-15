@@ -5,30 +5,63 @@
 
 enum CODES {
     VALID,
-    INVALID_INPUT,
+    INVALID_BASE,
     TOO_LARGE,
     BASE_OUT_OF_RANGE,
-    EMPTY_LINE
+    EMPTY_LINE,
+    INCORRECT_NUMBER_SYSTEM,
+    INVALID_NUMBER
 };
 
 void ValidateCode(const CODES code) {
     switch (code) {
-        case INVALID_INPUT: printf("Invalid inputted number\n"); break;
+        case INVALID_BASE: printf("Invalid inputted base\n"); break;
         case TOO_LARGE: printf("too large\n"); break;
         case BASE_OUT_OF_RANGE: printf("base out of range\n"); break;
         case EMPTY_LINE: printf("empty line\n"); break;
+        case INCORRECT_NUMBER_SYSTEM: printf("incorrect number system\n"); break;
+        case INVALID_NUMBER: printf("invalid number\n"); break;
         default: printf("Unknown error code\n"); break;
     }
 }
 
-CODES Validate(const char* argv) {
+CODES ValidateBase(const char* argv) {
+    int cnt = 0;
+    while (*argv != '\0') {
+        if (!isdigit(*argv) and (!islower(*argv))) {
+            return INVALID_BASE;
+        } else {
+            argv++;
+            cnt++;
+        }
+    }
+    if (cnt == 0) {
+        return EMPTY_LINE;
+    }
+    return VALID;
+}
+
+CODES Validate(const char* argv, int base) {
     int cnt = 0;
     if (argv[0] == '-') {
         argv++;
     }
     while (*argv != '\0') {
+        //printf("%c", *argv);
         if (!isdigit(*argv) and (!islower(*argv))) {
-            return INVALID_INPUT;
+            return INVALID_NUMBER;
+        } else if (isdigit(*argv)) {
+            if (*argv - '0' >= base) {
+                return INCORRECT_NUMBER_SYSTEM;
+            }
+            argv++;
+            cnt++;
+        } else if (isalpha(*argv)) {
+            if ((*argv - 'a') >= (base - 10)) {
+                return INCORRECT_NUMBER_SYSTEM;
+            }
+            argv++;
+            cnt++;
         } else {
             argv++;
             cnt++;
@@ -40,6 +73,7 @@ CODES Validate(const char* argv) {
     if (cnt == 0) {
         return EMPTY_LINE;
     }
+    //printf("hui\n");
     return VALID;
 }
 
@@ -60,24 +94,50 @@ void Clear(const int i, char ** arr, const char *base) {
 }
 
 int FromBaseTo10 (const int base, char *str) {
-    int res = 0;
+    int res = 0, negFlag = 0;
     char *p = str;
+
+    if (*p == '-') {
+        negFlag = 1;
+        p++;
+    }
+
     while (*p) {
         if (isalpha(*p)) {
-            res = res * base + *p++ - 'A' + 10;
+            res = res * base + *p++ - 'a' + 10;
         }
         else {
             res = res * base + *p++ - '0';
         }
     }
+    if (negFlag) {
+        res = -res;
+    }
     return res;
+}
+
+char * From10toBase(int num, int base) {
+    char buf[BUFSIZ], *p = buf + BUFSIZ - 1;
+    int r;
+    *p-- = 0;
+
+    if (num < 0) {
+        num = -num;
+        *p = '-';
+    }
+
+    while (num) {
+        *p-- = ((r = num % base) > 9) ? r - 10 + 'a' : r + '0';
+        num /= base;
+    }
+    return p + 1;
 }
 
 int main() {
     char baseArr[BUFSIZ];
     printf("Enter base:\n");
     gets(baseArr);
-    CODES ret = Validate(baseArr);
+    CODES ret = ValidateBase(baseArr);
     if (ret != VALID) {
         ValidateCode(ret);
         return -1;
@@ -88,6 +148,8 @@ int main() {
         ValidateCode(ret);
         return -1;
     }
+
+    printf("Base: %d\n", base);
 
 
     char ** numArr = NULL, **ptr;
@@ -106,7 +168,7 @@ int main() {
         if (!strcmp(buf, "stop")) {
             break;
         }
-        ret = Validate(buf);
+        ret = Validate(buf, base);
         if (ret != VALID) {
             ValidateCode(ret);
             Clear(cnt, numArr, baseArr);
@@ -133,9 +195,20 @@ int main() {
     }
 
     //Обработка строк
+    int maxNumber = 0;
+
     for (int j = 0; j < cnt; ++j) {
         printf("%d\n", FromBaseTo10(base, numArr[j]));
+        int num = FromBaseTo10(base, numArr[j]);
+        if (abs(num) > abs(maxNumber)) {
+            maxNumber = num;
+        }
     }
+    printf("Max number: %d\n", maxNumber);
+    printf("In 9th num. sys: %s\n", From10toBase(maxNumber, 9));
+    printf("In 18th num. sys: %s\n", From10toBase(maxNumber, 18));
+    printf("In 27th num. sys: %s\n", From10toBase(maxNumber, 27));
+    printf("In 36th num. sys: %s\n", From10toBase(maxNumber, 36));
 
     //Очистка
     Clear(cnt, numArr, baseArr);
