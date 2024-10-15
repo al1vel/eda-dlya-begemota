@@ -45,6 +45,14 @@ CODES ValidateBase(int base) {
     return VALID;
 }
 
+void Clear(int i, char ** arr, char *base) {
+    for (int j = 0; j < i; ++j) {
+        free(arr[j]);
+    }
+    free(arr);
+    delete base;
+}
+
 int main() {
     char baseArr[BUFSIZ];
     printf("Enter base:\n");
@@ -64,11 +72,11 @@ int main() {
 
     char ** numArr = NULL, **ptr;
     char buf[BUFSIZ];
-    int i = 0, j, count = 2;
+    int cnt = 0, j, arrSize = 2;
 
-    numArr = (char**)realloc(numArr, count * sizeof(char*));
+    numArr = (char**)realloc(numArr, arrSize * sizeof(char*));
     if (numArr == NULL) {
-        printf("Pizdec");
+        printf("Unable to allocate memory for numbers");
         return -1;
     }
 
@@ -81,39 +89,44 @@ int main() {
         ret = Validate(buf);
         if (ret != VALID) {
             ValidateCode(ret);
-            for (j = 0; j < i; ++j) {
-                free(numArr[j]);
-            }
-            free(numArr);
+            // for (j = 0; j < i; ++j) {
+            //     free(numArr[j]);
+            // }
+            // free(numArr);
+            Clear(cnt, numArr, baseArr);
             return -1;
         }
 
-        if (i == count) {
-            count *= 2;
-            ptr = (char**)realloc(numArr, count * sizeof(char*));
+        if (cnt == arrSize) {
+            arrSize *= 2;
+            ptr = (char**)realloc(numArr, arrSize * sizeof(char*));
             if (ptr == NULL) {
-                for (j = 0; j < i; ++j) {
-                    free(numArr[j]);
-                }
-                free(numArr);
-                printf("Error");
+                // for (j = 0; j < i; ++j) {
+                //     free(numArr[j]);
+                // }
+                // free(numArr);
+                printf("Error reallocating memory");
+                Clear(cnt, numArr, baseArr);
                 return -1;
             }
             numArr = ptr;
         }
-        numArr[++i - 1] = (char*)malloc((strlen(buf) + 1) * sizeof(char));
-        //Обработка ошибки malloc - освободить всё ранее заданное и послать пользователя нахуй
-        strcpy(numArr[i - 1], buf);
+        numArr[++cnt - 1] = (char*)malloc((strlen(buf) + 1) * sizeof(char));
+        if (numArr[cnt - 1] == NULL) {
+            printf("Error allocating memory");
+            Clear(cnt, numArr, baseArr);
+            return -1;
+        }
+        strcpy(numArr[cnt - 1], buf);
     }
 
     //печать строк
-    for (j = 0; j < i; ++j) {
+    for (j = 0; j < cnt; ++j) {
         printf("%s\n", numArr[j]);
     }
+    printf("%d\n", cnt);
 
     //Очистка
-    for (j = 0; j < i; ++j) {
-        free(numArr[j]);
-    }
-    free(numArr);
+    Clear(cnt, numArr, baseArr);
+    return 0;
 }
