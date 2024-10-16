@@ -217,8 +217,24 @@ void funcForQ() {
 
 }
 
-void funcForT() {
+void funcForT(const double eps, const double a, const double b, const double c) {
+    const double st[3] = {a, b, c};
+    int j, flag = 0;
+    for (int i = 0; i < 3; i++) {
+        const double aKv = st[i] * st[i];
+        const double bKv = st[((i + 1) > 2) ? i - 1 : i + 1] * st[((i + 1) > 2) ? i - 1 : i + 1];
+        const double cKv = st[((j = i + 2) > 2) ? j - (4 - i) : i + 2] * st[((j = i + 2) > 2) ? j - (4 - i) : i + 2];
 
+        printf("%f %f %f\n", aKv, bKv, cKv);
+        if (fabs(aKv - (bKv + cKv)) < eps) {
+            flag = 1;
+        }
+    }
+    if (flag) {
+        printf("right-angled triangle\n");
+    } else {
+        printf("NOT right-angled triangle\n");
+    }
 }
 
 void funcForM (const int first, const int second) {
@@ -244,7 +260,10 @@ int main(const int argc, char *argv[]) {
     }
     int funcType = ret % 3;
     CODES ret_code = ValidateArgs(argc, funcType, argv);
-    ValidateCodes(ret_code);
+    if (ret_code != VALID) {
+        ValidateCodes(ret_code);
+        return -1;
+    }
 
     switch (funcType) {
         case 0: {
@@ -256,7 +275,7 @@ int main(const int argc, char *argv[]) {
             break;
         }
         case 2: {
-            funcForT();
+            funcForT(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
             break;
         }
         default: {
