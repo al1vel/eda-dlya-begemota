@@ -1,6 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+enum CODES {
+    VALID,
+    NO_FORMAT,
+    INVALID_PATH,
+    SUCCESS
+};
+
+typedef CODES(*callback)(FILE*, FILE*);
+
+void ValidateCode(const CODES code) {
+    switch (code) {
+        case NO_FORMAT: printf("Path has invalid format\n"); break;
+        case INVALID_PATH: printf("Path is invalid\n"); break;
+        default: printf("Invalid code\n"); break;
+    }
+}
 
 int find_flag(const char* arg, const char** flags) {
     for (int i = 0; i < 16; ++i) {
@@ -28,6 +46,97 @@ void Adding_prefix(char* prefix, char* outFile, char* inFile) {
     //printf("hui");
 }
 
+CODES ValidatePath(char* path) {
+    int l = strlen(path);
+    char* ptr = path + l - 1;
+    while (*ptr != '.' and l > 0) {
+        --ptr;
+        l--;
+    }
+    ++ptr;
+    if(strcmp(ptr, "txt") != 0) {
+        return NO_FORMAT;
+    }
+    while (isalpha(*ptr) || isdigit(*ptr) || *ptr == '-'
+    || *ptr == '_' || *ptr == '.' || *ptr == '\\') {
+        --ptr;
+    }
+    if (*ptr != ':' || !isupper(*(ptr - 1)) || *(ptr + 1) != '\\') {
+        return INVALID_PATH;
+    }
+    return VALID;
+}
+
+CODES funcForD (FILE* inFile, FILE* outFile) {
+    char c;
+    do {
+        c = (char)fgetc(inFile);
+        if (c != EOF and !isdigit(c)) {
+            fputc(c, outFile);
+        }
+    } while (c != EOF);
+    return SUCCESS;
+}
+
+CODES funcForI (FILE* inFile, FILE* outFile) {
+    char c;
+    int cnt = 0;
+    do {
+        c = (char)fgetc(inFile);
+        if (c != EOF) {
+            if (c == '\n') {
+                fprintf(outFile, "%d\n", cnt);
+                cnt = 0;
+            }
+            else if ((c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z')) {
+                cnt++;
+            }
+        }
+    } while (c != EOF);
+    fprintf(outFile, "%d\n", cnt);
+    return SUCCESS;
+}
+
+CODES funcForS (FILE* inFile, FILE* outFile) {
+
+    char c;
+    int cnt = 0;
+    do {
+        c = (char)fgetc(inFile);
+        //printf("%c %d\n", c, (!isdigit(c) and !(c >= 'A' and c <= 'Z') and !(c >= 'a' and c <= 'z') and (c != ' ')));
+        if (c != EOF) {
+            if (c == '\n') {
+                fprintf(outFile, "%d\n", cnt);
+                cnt = 0;
+            }
+            else if (!isdigit(c) and !(c >= 'A' and c <= 'Z') and !(c >= 'a' and c <= 'z') and (c != ' ')) {
+                cnt++;
+            }
+        }
+    } while (c != EOF);
+    fprintf(outFile, "%d\n", cnt);
+    return SUCCESS;
+}
+
+CODES funcForA (FILE* inFile, FILE* outFile) {
+    printf("hui");
+    char c;
+
+    do {
+        c = (char)fgetc(inFile);
+        if (c != EOF) {
+            if (!isdigit(c)) {
+                //int code = (int)c;
+                fprintf(outFile, "%X", c);
+            } else {
+                fprintf(outFile, "%c", c);
+            }
+        }
+    } while (c != EOF);
+
+    return SUCCESS;
+}
+
 int main(const int argc, char *argv[]) {
     if (argc == 1) {
         printf("Wrong number of arguments\n");
@@ -37,6 +146,12 @@ int main(const int argc, char *argv[]) {
     const int flag = find_flag(argv[1], flags);
     if (flag == -1) {
         printf("Flag <%s> is not supported\n", argv[1]);
+        return -1;
+    }
+
+    CODES ret_code = ValidatePath(argv[2]);
+    if (ret_code != VALID) {
+        ValidateCode(ret_code);
         return -1;
     }
 
@@ -70,12 +185,36 @@ int main(const int argc, char *argv[]) {
             printf("Error allocating memory for output file\n");
             return -1;
         }
+        ret_code = ValidatePath(argv[3]);
+        if (ret_code != VALID) {
+            ValidateCode(ret_code);
+            return -1;
+        }
         strcpy(outFile, argv[3]);
     }
 
-    printf("Output file: %s\n", outFile);
     printf("Input file: %s\n", inFile);
+    printf("Output file: %s\n", outFile);
 
+    FILE* in = fopen(inFile, "r");
+    FILE* out = fopen(outFile, "w");
+    if (in == NULL) {
+        printf("Error opening INPUT file\n");
+        return -1;
+    }
+    if (out == NULL) {
+        printf("Error opening OUT file\n");
+        return -1;
+    }
+
+    int FuncType = flag % 4;
+    callback functions[4] = {funcForD, funcForI, funcForS, funcForA};
+
+    callback func = functions[FuncType];
+    func(in, out);
+
+    fclose(in);
+    fclose(out);
     free(inFile);
     free(outFile);
     return 0;
