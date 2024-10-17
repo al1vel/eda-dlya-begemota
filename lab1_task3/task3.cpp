@@ -14,7 +14,8 @@ enum CODES {
     NUM_TOO_LARGE,
     NOT_A_NUM,
     NUMBER_TOO_BIG,
-    UNKNOWN_FUNC_TYPE
+    UNKNOWN_FUNC_TYPE,
+    MALLOC_FAIL
 };
 
 int toInt(const char* argv) {
@@ -209,14 +210,33 @@ void ValidateCodes (CODES ret_code) {
         case NUM_TOO_LARGE: printf("is too large\n"); break;
         case NUMBER_TOO_BIG: printf("is too big\n"); break;
         case UNKNOWN_FUNC_TYPE: printf("UNKNOWN_FUNC_TYPE\n"); break;
+        case MALLOC_FAIL: printf("Failed to allocate memory\n"); break;
         default: printf("UNKNOWN ERROR CODE\n");
     }
 }
 
-void funcForQ(const double eps, const double first, const double sec, const double th) {
-    const double koef[3] = {first, sec, th};
-    double a, b, c, r1, r2;
+void ResolveEq(double eps, double a, double b, double c) {
+    double r1, r2;
+    if (fabs(a) < eps) {
+        r1 = -c / b;
+        printf("Root: %f\n", r1);
+    } else {
+        double disk = b * b - 4 * a * c;
+        //printf("disk %f\n", disk);
+        if (disk < 0) {
+            printf("No roots, negative disk\n\n");
+            return;
+        }
+        r1 = (-b + sqrt(disk)) / (2 * a);
+        r2 = (-b - sqrt(disk)) / (2 * a);
+        printf("Root1: %f\nRoot2: %f\n\n", r1, r2);
+    }
+}
 
+int Permutation (double *arr, double eps, const double first, const double sec, const double th) {
+    const double koef[3] = {first, sec, th};
+    double a, b, c;
+    int ind = 0, cnt = 0;
     for (int i = 0; i < 3; i++) {
         a = koef[i];
         for (int j = 0; j < 3; j++) {
@@ -227,22 +247,41 @@ void funcForQ(const double eps, const double first, const double sec, const doub
             }
             for (int k = 0; k < 3; k++) {
                 if (k == i or k == j) {
-                    continue;
                 } else {
                     c = koef[k];
                 }
             }
-            printf("%.3f %.3f %.3f\n", a, b, c);
-            if (fabs(a) < eps) {
-                r1 = -c / b;
-                printf("Root: %f\n", r1);
-            } else {
-                r1 = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
-                r2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
-                printf("Root1: %f\nRoot2: %f\n\n", r1, r2);
+            //printf("%.3f %.3f %.3f\n", a, b, c);
+            int flag = 1;
+            for (int l = 0; l < cnt; ++l) {
+                if ((fabs(arr[l * 3] - a) < eps) and (fabs(arr[l * 3 + 1] - b) < eps) and (fabs(arr[l * 3 + 2] - c) < eps)) {
+                    flag = 0;
+                }
+            }
+            if (flag) {
+                arr[ind++] = a;
+                arr[ind++] = b;
+                arr[ind++] = c;
+                cnt++;
             }
         }
     }
+    return cnt;
+}
+
+CODES funcForQ(const double eps, const double first, const double sec, const double th) {
+    double * arr;
+    arr = (double *)malloc(18 * sizeof(double));
+    if (arr == NULL) {
+        return MALLOC_FAIL;
+    }
+    const int cnt = Permutation(arr, eps, first, sec, th);
+    for (int i = 0; i < cnt * 3; i+=3) {
+        printf("%.3f %.3f %.3f\n", arr[i], arr[i + 1], arr[i + 2]);
+        ResolveEq(eps, arr[i], arr[i + 1], arr[i + 2]);
+    }
+    free(arr);
+    return VALID;
 }
 
 void funcForT(const double eps, const double a, const double b, const double c) {
@@ -294,7 +333,11 @@ int main(const int argc, char *argv[]) {
 
     switch (funcType) {
         case 0: {
-            funcForQ(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+            CODES r = funcForQ(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+            if (r != VALID) {
+                ValidateCodes(r);
+                return -1;
+            }
             break;
         }
         case 1: {
@@ -310,6 +353,5 @@ int main(const int argc, char *argv[]) {
             return -1;
         }
     }
-
     return 0;
 }
