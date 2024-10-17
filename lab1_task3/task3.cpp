@@ -199,33 +199,60 @@ int find_flag(const char *arg, const char **flags) {
 void ValidateCodes (CODES ret_code) {
     switch (ret_code) {
         case VALID: printf("Valid\n"); break;
-        case WRONG_ARG_NUMBER: printf("WRONG_ARG_NUMBER\n"); break;
-        case EPS_NOT_A_NUM: printf("EPS_NOT_A_NUM\n"); break;
-        case EPS_TOO_BIG: printf("EPS_TOO_BIG\n"); break;
-        case NULL_EPS: printf("NULL_EPS\n"); break;
-        case NEG_EPS: printf("NEG_EPS\n"); break;
-        case EPS_TOO_LARGE: printf("EPS_TOO_LARGE\n"); break;
-        case NOT_A_NUM: printf("NOT_A_NUM\n"); break;
-        case NUM_TOO_LARGE: printf("NUM_TOO_LARGE\n"); break;
-        case NUMBER_TOO_BIG: printf("NUMBER_TOO_BIG\n"); break;
+        case WRONG_ARG_NUMBER: printf("Wrong number of arguments\n"); break;
+        case EPS_NOT_A_NUM: printf("EPS is NOT a number\n"); break;
+        case EPS_TOO_BIG: printf("EPS is too big\n"); break;
+        case NULL_EPS: printf("EPS can't be null\n"); break;
+        case NEG_EPS: printf("EPS can't be negative\n"); break;
+        case EPS_TOO_LARGE: printf("EPS is too large\n"); break;
+        case NOT_A_NUM: printf("is NOT a number\n"); break;
+        case NUM_TOO_LARGE: printf("is too large\n"); break;
+        case NUMBER_TOO_BIG: printf("is too big\n"); break;
         case UNKNOWN_FUNC_TYPE: printf("UNKNOWN_FUNC_TYPE\n"); break;
         default: printf("UNKNOWN ERROR CODE\n");
     }
 }
 
-void funcForQ() {
+void funcForQ(const double eps, const double first, const double sec, const double th) {
+    const double koef[3] = {first, sec, th};
+    double a, b, c, r1, r2;
 
+    for (int i = 0; i < 3; i++) {
+        a = koef[i];
+        for (int j = 0; j < 3; j++) {
+            if (j == i) {
+                continue;
+            } else {
+                b = koef[j];
+            }
+            for (int k = 0; k < 3; k++) {
+                if (k == i or k == j) {
+                    continue;
+                } else {
+                    c = koef[k];
+                }
+            }
+            printf("%.3f %.3f %.3f\n", a, b, c);
+            if (fabs(a) < eps) {
+                r1 = -c / b;
+                printf("Root: %f\n", r1);
+            } else {
+                r1 = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
+                r2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
+                printf("Root1: %f\nRoot2: %f\n\n", r1, r2);
+            }
+        }
+    }
 }
 
 void funcForT(const double eps, const double a, const double b, const double c) {
     const double st[3] = {a, b, c};
-    int j, flag = 0;
+    int flag = 0;
     for (int i = 0; i < 3; i++) {
         const double aKv = st[i] * st[i];
         const double bKv = st[((i + 1) > 2) ? i - 1 : i + 1] * st[((i + 1) > 2) ? i - 1 : i + 1];
-        const double cKv = st[((j = i + 2) > 2) ? j - (4 - i) : i + 2] * st[((j = i + 2) > 2) ? j - (4 - i) : i + 2];
-
-        printf("%f %f %f\n", aKv, bKv, cKv);
+        const double cKv = st[((i + 2) > 2) ? 0 : i + 2] * st[((i + 2) > 2) ? 0 : i + 2];
+        //printf("%f %f %f\n", aKv, bKv, cKv);
         if (fabs(aKv - (bKv + cKv)) < eps) {
             flag = 1;
         }
@@ -267,7 +294,7 @@ int main(const int argc, char *argv[]) {
 
     switch (funcType) {
         case 0: {
-            funcForQ();
+            funcForQ(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
             break;
         }
         case 1: {
