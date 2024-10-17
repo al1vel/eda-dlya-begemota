@@ -138,7 +138,7 @@ ret_type_t funcForF(char* argv) {
 	return SUCCESS;
 }
 
-int find_flag(char* arg, const char** flags, int size) {
+int find_flag(const char* arg, const char** flags, int size) {
 	for (int i = 0; i < 12; ++i) {
 		if (!strcmp(arg, flags[i])) {
 			return i;
