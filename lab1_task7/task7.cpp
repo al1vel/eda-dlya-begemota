@@ -39,6 +39,25 @@ CODES ValidatePath(char* path) {
     return VALID;
 }
 
+void funcForR (FILE* in1, FILE* in2, FILE* out) {
+    int flag = 1, stop = 1;
+    char c;
+
+    while (stop) {
+        if (flag == 1) {
+            while (isalnum(c = fgetc(in1))) {
+                fputc(c, out);
+            }
+            flag = 2;
+        } else if (flag == 2) {
+            while (isalnum(c = fgetc(in2))) {
+                fputc(c, out);
+            }
+            flag = 1;
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("Wrong number of arguments\n");
@@ -101,7 +120,13 @@ int main(int argc, char *argv[]) {
 
         printf("Input 1: %s\nInput 2: %s\nOutput: %s\n", inFile1, inFile2, outFile);
 
-
+        FILE* in1 = fopen(inFile1, "r");
+        FILE* in2 = fopen(inFile2, "r");
+        FILE* out = fopen(outFile, "w");
+        if (in1 == NULL || in2 == NULL || out == NULL) {
+            printf("Error opening files\n");
+            return -1;
+        }
 
         free(inFile2);
         free(inFile1);
