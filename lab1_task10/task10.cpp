@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     int maxNumber = 0;
 
     for (int j = 0; j < cnt; ++j) {
-        printf("%d\n", FromBaseTo10(base, numArr[j]));
+        //printf("%d\n", FromBaseTo10(base, numArr[j]));
         int num = FromBaseTo10(base, numArr[j]);
         if (abs(num) > abs(maxNumber)) {
             maxNumber = num;
