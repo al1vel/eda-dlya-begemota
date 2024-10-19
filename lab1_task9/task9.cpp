@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <string>
+#include <ctype.h>
+#include <stdlib.h>
 
 enum CODES {
     VALID,
