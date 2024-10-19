@@ -223,6 +223,11 @@ int main(const int argc, char *argv[]) {
         }
         strcpy(inFile2, argv[4]);
 
+        if (!strcmp(inFile1, outFile) or !strcmp(inFile2, outFile)) {
+            printf("Input and output files must be different\n");
+            return -1;
+        }
+
         printf("Input 1: %s\nInput 2: %s\nOutput: %s\n", inFile1, inFile2, outFile);
 
         FILE* in1 = fopen(inFile1, "r");

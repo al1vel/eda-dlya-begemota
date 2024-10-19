@@ -174,6 +174,11 @@ int main(const int argc, char *argv[]) {
     }
     strcpy(outFile, argv[3]);
 
+    if (!strcmp(inFile, outFile)) {
+        printf("Input and output files must be different\n");
+        return -1;
+    }
+
     FILE* in = fopen(inFile, "r");
     FILE* out = fopen(outFile, "w");
     if (in == NULL || out == NULL) {

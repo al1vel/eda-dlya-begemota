@@ -133,7 +133,11 @@ char * From10toBase(int num, int base) {
     return p + 1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 1) {
+        printf("Wrong number of args\n");
+        return -1;
+    }
     char baseArr[BUFSIZ];
     printf("Enter base:\n");
     gets(baseArr);

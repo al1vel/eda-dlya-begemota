@@ -345,6 +345,10 @@ int main(const int argc, char *argv[]) {
             break;
         }
         case 2: {
+            if (atof(argv[3]) == 0 or atof(argv[4]) == 0 or atof(argv[5]) == 0) {
+                printf("Sides can't be null");
+                return -1;
+            }
             funcForT(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
             break;
         }

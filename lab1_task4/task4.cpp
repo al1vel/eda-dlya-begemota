@@ -196,6 +196,11 @@ int main(const int argc, char *argv[]) {
     printf("Input file: %s\n", inFile);
     printf("Output file: %s\n", outFile);
 
+    if (!strcmp(inFile, outFile)) {
+        printf("Input and output files are the same\n");
+        return -1;
+    }
+
     FILE* in = fopen(inFile, "r");
     FILE* out = fopen(outFile, "w");
     if (in == NULL) {
