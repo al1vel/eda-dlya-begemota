@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int FindClosest(const int *arr, const int size, const int val) {
     int res, minDelta = 1000000;
@@ -15,11 +16,12 @@ int FindClosest(const int *arr, const int size, const int val) {
 }
 
 int main() {
-    const int upBound = 10;
-    const int loBound = 1;
+    srand(time(NULL));
+    const int upBound = 100;
+    const int loBound = 10;
 
-    const int sizeA = rand() % (upBound - loBound + 1) + 10;
-    const int sizeB = rand() % (upBound - loBound + 1) + 10;
+    const int sizeA = rand() % (upBound - loBound + 1);
+    const int sizeB = rand() % (upBound - loBound + 1);
     printf("The size of A: %d\nThe size of B: %d\n", sizeA, sizeB);
 
     int *A = (int*)malloc(sizeA * sizeof(int));
@@ -37,14 +39,14 @@ int main() {
 
     printf("\nArray A:\n");
     for (int i = 0; i < sizeA; i++) {
-        A[i] = (rand() % 200) - 100;
+        A[i] = (rand() % 2000) - 1000;
         printf("%d ", A[i]);
     }
     printf("\n\n");
 
     printf("Array B:\n");
     for (int i = 0; i < sizeB; i++) {
-        B[i] = (rand() % 200) - 100;
+        B[i] = (rand() % 2000) - 1000;
         printf("%d ", B[i]);
     }
     printf("\n\n");
