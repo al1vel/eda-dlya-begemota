@@ -17,7 +17,7 @@ void ValidateCode(const CODES code) {
     switch (code) {
         case NO_FORMAT: printf("Path has invalid format\n"); break;
         case INVALID_PATH: printf("Path is invalid\n"); break;
-        case NUMBER_SYSTEM_OUT_OF_RANGE: printf("Number is out of range\n"); break;
+        case NUMBER_SYSTEM_OUT_OF_RANGE: printf("Number system is out of range\n"); break;
         case INVALID_NUMBER: printf("Number is invalid\n"); break;
         default: printf("Invalid code\n"); break;
     }
@@ -32,15 +32,17 @@ int FromBaseTo10 (const int base, char *str) {
         p++;
     }
 
-    while (*p) {
+    while (*p != '\0') {
+        //printf("%c ", *p);
         if (isalpha(*p)) {
-            res = res * base + *p++ - 'a' + 10;
+            res = res * base + *p++ - 'A' + 10;
         }
         else {
             res = res * base + *p++ - '0';
         }
     }
     if (negFlag) {
+        printf("minus");
         res = -res;
     }
     return res;
@@ -68,7 +70,7 @@ CODES ValidatePath(char* path) {
 }
 
 CODES solve(FILE* in, FILE* out) {
-    int base = 0, i = 0;
+    int base = 0, i = 0, numFound = 0, notNull = 0;
 
     char *buff = (char *) malloc(BUFSIZ);
     if (buff == NULL) {
@@ -78,48 +80,60 @@ CODES solve(FILE* in, FILE* out) {
     }
 
     while (1) {
-        const unsigned char c = fgetc(in);
+        //printf("fl: %d\n", fl);
+        const char c = fgetc(in);
+        //printf("<%c> nf: %d\n", c, numFound);
 
         if (c == EOF) {
+            //printf("test");
             break;
         }
         if (!isalnum(c) or islower(c)) {
-            printf("c: %c", c);
-            free(buff);
-            fclose(in);
-            fclose(out);
-            return INVALID_NUMBER;
-        }
-
-        if (c == '\n' or c == ' ' or c == '\t') {
-            if (base >= 50 and base <= 57) {
-                base = base - 47;
-            } else if (base >= 65 and base <= 90) {
-                base = base - 54;
-            } else {
+            if (c != '\n' and c != ' ' and c != '\t') {
+                //printf("c: %d ", c);
                 free(buff);
                 fclose(in);
                 fclose(out);
-                return NUMBER_SYSTEM_OUT_OF_RANGE;
+                return INVALID_NUMBER;
             }
+        }
 
-            buff[i] = '\0';
+        if ((c == '\n' or c == ' ' or c == '\t')) {
+            if (numFound) {
+                if (base >= 50 and base <= 57) {
+                    base = base - 47;
+                } else if (base >= 65 and base <= 90) {
+                    base = base - 54;
+                } else {
+                    printf("<%c> ", c);
+                    free(buff);
+                    fclose(in);
+                    fclose(out);
+                    return NUMBER_SYSTEM_OUT_OF_RANGE;
+                }
 
-            for (int k = 0; k < i - 1; ++k) {
-                fputc(buff[k], out);
+                buff[i] = '\0';
+
+                for (int k = 0; k < i; ++k) {
+                    fputc(buff[k], out);
+                }
+                fputc(' ', out);
+                fprintf(out, "%d ", base);
+
+                int number = FromBaseTo10(base, buff);
+                fprintf(out, "%d\n", number);
+
+                i = 0;
+                numFound = 0;
             }
-            fputc(' ', out);
-            fprintf(out, "%d ", base);
-
-            int number = FromBaseTo10(base, buff);
-            fprintf(out, "%d", number);
-
-            i = 0;
         } else {
-            buff[i] = c;
-            i++;
-            if (c > base) {
-                base = c;
+            if (!(numFound == 0 and c == '0')) {
+                buff[i] = c;
+                i++;
+                if (c > base) {
+                    base = c;
+                }
+                numFound = 1;
             }
         }
     }
