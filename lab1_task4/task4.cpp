@@ -49,7 +49,7 @@ void Adding_prefix(char* prefix, char* outFile, char* inFile) {
 CODES ValidatePath(char* path) {
     int l = strlen(path);
     char* ptr = path + l - 1;
-    while (*ptr != '.' and l > 0) {
+    while (*ptr != '.' && l > 0) {
         --ptr;
         l--;
     }
@@ -71,7 +71,7 @@ CODES funcForD (FILE* inFile, FILE* outFile) {
     char c;
     do {
         c = (char)fgetc(inFile);
-        if (c != EOF and !isdigit(c)) {
+        if (c != EOF && !isdigit(c)) {
             fputc(c, outFile);
         }
     } while (c != EOF);
@@ -88,7 +88,7 @@ CODES funcForI (FILE* inFile, FILE* outFile) {
                 fprintf(outFile, "%d\n", cnt);
                 cnt = 0;
             }
-            else if ((c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z')) {
+            else if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
                 cnt++;
             }
         }
@@ -103,13 +103,13 @@ CODES funcForS (FILE* inFile, FILE* outFile) {
     int cnt = 0;
     do {
         c = (char)fgetc(inFile);
-        //printf("%c %d\n", c, (!isdigit(c) and !(c >= 'A' and c <= 'Z') and !(c >= 'a' and c <= 'z') and (c != ' ')));
+        //printf("%c %d\n", c, (!isdigit(c) && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') && (c != ' ')));
         if (c != EOF) {
             if (c == '\n') {
                 fprintf(outFile, "%d\n", cnt);
                 cnt = 0;
             }
-            else if (!isdigit(c) and !(c >= 'A' and c <= 'Z') and !(c >= 'a' and c <= 'z') and (c != ' ')) {
+            else if (!isdigit(c) && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') && (c != ' ')) {
                 cnt++;
             }
         }
@@ -197,7 +197,7 @@ int main(const int argc, char *argv[]) {
     printf("Output file: %s\n", outFile);
 
     if (!strcmp(inFile, outFile)) {
-        printf("Input and output files are the same\n");
+        printf("Input && output files are the same\n");
         return -1;
     }
 

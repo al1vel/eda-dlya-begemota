@@ -51,7 +51,7 @@ int FromBaseTo10 (const int base, char *str) {
 CODES ValidatePath(char* path) {
     int l = strlen(path);
     char* ptr = path + l - 1;
-    while (*ptr != '.' and l > 0) {
+    while (*ptr != '.' && l > 0) {
         --ptr;
         l--;
     }
@@ -85,11 +85,48 @@ CODES solve(FILE* in, FILE* out) {
         //printf("<%c> nf: %d\n", c, numFound);
 
         if (c == EOF) {
-            //printf("test");
+
+                if (numFound) {
+                    if (base >= 50 && base <= 57) {
+                        base = base - 47;
+                    } else if (base >= 65 && base <= 90) {
+                        base = base - 54;
+                    } else {
+                        printf("<%c> ", c);
+                        free(buff);
+                        fclose(in);
+                        fclose(out);
+                        return NUMBER_SYSTEM_OUT_OF_RANGE;
+                    }
+
+                    buff[i] = '\0';
+
+                    for (int k = 0; k < i; ++k) {
+                        fputc(buff[k], out);
+                    }
+                    fputc(' ', out);
+                    fprintf(out, "%d ", base);
+
+                    int number = FromBaseTo10(base, buff);
+                    fprintf(out, "%d\n", number);
+
+                    i = 0;
+                    numFound = 0;
+                }
+
+
+                    buff[i] = c;
+                    i++;
+                    if (c > base) {
+                        base = c;
+                    }
+                    numFound = 1;
+
+
             break;
         }
-        if (!isalnum(c) or islower(c)) {
-            if (c != '\n' and c != ' ' and c != '\t') {
+        if (!isalnum(c) || islower(c)) {
+            if (c != '\n' && c != ' ' && c != '\t') {
                 //printf("c: %d ", c);
                 free(buff);
                 fclose(in);
@@ -98,11 +135,11 @@ CODES solve(FILE* in, FILE* out) {
             }
         }
 
-        if ((c == '\n' or c == ' ' or c == '\t')) {
+        if ((c == '\n' || c == ' ' || c == '\t')) {
             if (numFound) {
-                if (base >= 50 and base <= 57) {
+                if (base >= 50 && base <= 57) {
                     base = base - 47;
-                } else if (base >= 65 and base <= 90) {
+                } else if (base >= 65 && base <= 90) {
                     base = base - 54;
                 } else {
                     printf("<%c> ", c);
@@ -127,7 +164,7 @@ CODES solve(FILE* in, FILE* out) {
                 numFound = 0;
             }
         } else {
-            if (!(numFound == 0 and c == '0')) {
+            if (!(numFound == 0 && c == '0')) {
                 buff[i] = c;
                 i++;
                 if (c > base) {
@@ -175,7 +212,7 @@ int main(const int argc, char *argv[]) {
     strcpy(outFile, argv[3]);
 
     if (!strcmp(inFile, outFile)) {
-        printf("Input and output files must be different\n");
+        printf("Input && output files must be different\n");
         return -1;
     }
 
