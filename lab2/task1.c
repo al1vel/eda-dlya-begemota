@@ -1,13 +1,24 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
 enum {
     VALID,
     NOT_A_NUM,
     EMPTY_LINE
 } CODES;
+
+unsigned int toUInt(const char* argv) {
+    unsigned int res = 0;
+    int i = 0;
+    while (argv[i] != '\0') {
+        //printf("<%c> ", argv[i]);
+        res = res * 10 + argv[i] - '0';
+        i++;
+    }
+    //printf("%d\n", res);
+    return res;
+}
 
 void ValidateCode(const int code) {
     switch (code) {
@@ -147,11 +158,51 @@ char *newOrder(const char *str) {
     return result;
 }
 
-char *concat(char* str1, unsigned int seed, ...) {
-    va_list args;
-    va_start (args, seed);
+char *concat(int argc, char *argv[]) {
+    unsigned int seed = toUInt(argv[3]);
+    //printf("seed = %u\n", seed);
 
+    int len = strLength(argv[2]);
+    for (int i = 4; i < argc; ++i) {
+        len += strLength(argv[i]);
+    }
+    //printf("len is %d\n", len);
+    char *result = (char*)malloc(len + 1);
+    if (result == NULL) {
+        printf("malloc failed\n");
+        return NULL;
+    }
+    srand(seed);
 
+    int cnt = 0, id = 0, ind = 0;
+    int markers[argc];
+    for (int i = 0; i < argc; ++i) {
+        markers[i] = 0;
+        //printf("markers[%d] = %d\n", i, markers[i]);
+    }
+
+    while (cnt < (argc - 3)) {
+
+        do {
+            ind = rand() % argc;
+        } while (markers[ind] == 1 || ind == 0 || ind == 1 || ind == 3);
+        //printf("Index is %d\n", ind);
+        markers[ind] = 1;
+
+        //printf("arg: %s\n", argv[ind]);
+
+        int curLen = strLength(argv[ind]);
+        //printf("Curlen is %d\n", curLen);
+        for (int k = 0; k < curLen; ++k) {
+            result[id] = argv[ind][k];
+            //printf("<%c> ", argv[ind][k]);
+            id++;
+        }
+        //printf("\n");
+        cnt++;
+    }
+    result[len] = '\0';
+    return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -203,6 +254,9 @@ int main(int argc, char *argv[]) {
                 ValidateCode(ret_code);
                 return -1;
             }
+            char* res = concat(argc, argv);
+            printf("New string is <%s>\n", res);
+            free(res);
             break;
         }
         default: {
@@ -210,7 +264,5 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
-
-
     return 0;
 }
