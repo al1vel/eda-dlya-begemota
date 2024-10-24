@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 int strLength(const char *str) {
     int res = 0;
@@ -9,6 +10,14 @@ int strLength(const char *str) {
         str++;
     }
     return res;
+}
+
+void strcpy(char *str, char *src) {
+    char *original_dest = str;
+    while (*src != '\0') {
+        *str++ = *src++;
+    }
+    *str = '\0';
 }
 
 char *reverse(const char *str) {
@@ -26,8 +35,8 @@ char *reverse(const char *str) {
     return reversed;
 }
 
-char * summ(char* first, char* second, int base) {
-    int lenFirst = strLength(first), lenSecond = strLength(second);
+char * plus(char* first, char* second, int base) {
+    int lenFirst = strLength(first), lenSecond = strLength(second), lenUp, lenDown;
 
     char *res = (char*)malloc((lenFirst + lenSecond + 1)*sizeof(char));
     if (res == NULL) {
@@ -38,12 +47,14 @@ char * summ(char* first, char* second, int base) {
     if (lenFirst >= lenSecond) {
         up = first + lenFirst - 1;
         down = second + lenSecond - 1;
+        lenDown = lenSecond;
     } else {
         up = second + lenSecond - 1;
         down = first + lenFirst - 1;
+        lenDown = lenFirst;
     }
     int ind = 0, dobavka = 0, razr;
-    while (*down) {
+    while (lenDown > 0) {
         int d = (isdigit(*down)) ? *down - '0' : *down - 'a' + 10;
         int u = (isdigit(*up)) ? *up - '0' : *up - 'a' + 10;
         int s = d + u + dobavka;
@@ -58,6 +69,7 @@ char * summ(char* first, char* second, int base) {
         res[ind++] = ch;
         down--;
         up--;
+        lenDown--;
     }
 
     while (*up) {
@@ -88,8 +100,51 @@ char * summ(char* first, char* second, int base) {
     return reversed;
 }
 
+char * summ(int base, int count, ...) {
+    va_list arg;
+    va_start(arg, count);
+
+    if (count < 1) {
+        printf("Nothing to summ.\n");
+        va_end(arg);
+        return NULL;
+    } else if (count == 1) {
+        char *str = va_arg(arg, char *);
+        va_end(arg);
+        return str;
+    }
+
+    char * first = va_arg(arg, char *);
+    char * second = va_arg(arg, char *);
+    char *firstSum = plus(first, second, base);
+    int len = strLength(firstSum);
+
+    char *res = (char*)malloc((len + 1)*sizeof(char));
+    strcpy(res, firstSum);
+    free(firstSum);
+    //printf("perv 2: %s\n", res);
+
+    for (int i = 2; i < count; ++i) {
+        char * num = va_arg(arg, char *);
+        char * promRes = plus(res, num, base);
+        //len = strLength(promRes);
+        // char * ptr = (char*)realloc(res, (len + 1)*sizeof(char));
+        // if (ptr == NULL) {
+        //     printf("Realloc failed\n");
+        //     free(promRes);
+        //     free(res);
+        //     return NULL;
+        // }
+        // res = ptr;
+        strcpy(res, promRes);
+        free(promRes);
+    }
+    return res;
+}
+
 int main() {
-    char * res = summ("63c", "1ef35", 16);
+    //char * res = plus("1000", "288", 10);
+    char* res = summ(10, 4, "123", "165", "10000", "123456");
     printf("%s\n", res);
     free(res);
 }
