@@ -13,7 +13,6 @@ int strLength(const char *str) {
 }
 
 void strcpy(char *str, char *src) {
-    char *original_dest = str;
     while (*src != '\0') {
         *str++ = *src++;
     }
@@ -27,7 +26,6 @@ char *reverse(const char *str) {
         printf("malloc failed\n");
         return NULL;
     }
-
     for (int i = 0; i < len; i++) {
         reversed[i] = str[len - i - 1];
     }
@@ -123,7 +121,6 @@ char * summ(int base, int count, ...) {
     char *firstSum = plus(first, second, base);
     int len = strLength(firstSum);
 
-
     char *res = (char*)malloc((len + 1)*sizeof(char));
     strcpy(res, firstSum);
     free(firstSum);
@@ -131,15 +128,6 @@ char * summ(int base, int count, ...) {
     for (int i = 2; i < count; ++i) {
         char * num = va_arg(arg, char *);
         char * promRes = plus(res, num, base);
-        len = strLength(promRes);
-        char *ptr = (char*)realloc(res, (len + 1)*sizeof(char));
-        if (ptr == NULL) {
-            printf("Realloc failed\n");
-            free(promRes);
-            free(res);
-            return NULL;
-        }
-        res = ptr;
         strcpy(res, promRes);
         free(promRes);
     }
