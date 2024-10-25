@@ -74,9 +74,16 @@ void func(char *substr, int cnt, ...) {
             }
             lineNum++;
             line[ind] = '\0';
-            int cmp = my_strstr(line, substr);
-            if (cmp != -1) {
-                printf("Line %d from %d symbol.\n", lineNum, cmp);
+            char *p = line;
+            int dobavka = 0;
+            while (my_strstr(p, substr) != -1) {
+                int cmp = my_strstr(p, substr);
+                //printf("%s - %s\n", p, substr);
+                if (cmp != -1) {
+                    printf("Line %d from %d symbol.\n", lineNum, cmp + dobavka);
+                }
+                p += cmp;
+                dobavka += cmp;
             }
             free(line);
         }
@@ -87,5 +94,5 @@ void func(char *substr, int cnt, ...) {
 
 
 int main() {
-    func("hui", 2, "D:/aboba.txt", "D:/hui.txt");
+    func("hui", 1, "D:/aboba.txt", "D:/hui.txt", "D:/hui2.txt");
 }
