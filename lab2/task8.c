@@ -48,17 +48,19 @@ char * plus(char* first, char* second, int base) {
         up = first + lenFirst - 1;
         down = second + lenSecond - 1;
         lenDown = lenSecond;
+        lenUp = lenFirst;
     } else {
         up = second + lenSecond - 1;
         down = first + lenFirst - 1;
         lenDown = lenFirst;
+        lenUp = lenSecond;
     }
     int ind = 0, dobavka = 0, razr;
     while (lenDown > 0) {
         int d = (isdigit(*down)) ? *down - '0' : *down - 'a' + 10;
         int u = (isdigit(*up)) ? *up - '0' : *up - 'a' + 10;
         int s = d + u + dobavka;
-        if (s > base) {
+        if (s >= base) {
             razr = s - base;
             dobavka = (s / base);
         } else {
@@ -70,9 +72,10 @@ char * plus(char* first, char* second, int base) {
         down--;
         up--;
         lenDown--;
+        lenUp--;
     }
 
-    while (*up) {
+    while (lenUp > 0) {
         char ch;
         if (dobavka > 0) {
             int s = dobavka + ((isdigit(*up)) ? *up - '0' : *up - 'a' + 10);
@@ -89,6 +92,7 @@ char * plus(char* first, char* second, int base) {
         }
         res[ind++] = ch;
         up--;
+        lenUp--;
     }
     if (dobavka > 0) {
         res[ind++] = (dobavka > 9) ? dobavka - 10 + 'a' : dobavka + '0';
@@ -119,23 +123,23 @@ char * summ(int base, int count, ...) {
     char *firstSum = plus(first, second, base);
     int len = strLength(firstSum);
 
+
     char *res = (char*)malloc((len + 1)*sizeof(char));
     strcpy(res, firstSum);
     free(firstSum);
-    //printf("perv 2: %s\n", res);
 
     for (int i = 2; i < count; ++i) {
         char * num = va_arg(arg, char *);
         char * promRes = plus(res, num, base);
-        //len = strLength(promRes);
-        // char * ptr = (char*)realloc(res, (len + 1)*sizeof(char));
-        // if (ptr == NULL) {
-        //     printf("Realloc failed\n");
-        //     free(promRes);
-        //     free(res);
-        //     return NULL;
-        // }
-        // res = ptr;
+        len = strLength(promRes);
+        char *ptr = (char*)realloc(res, (len + 1)*sizeof(char));
+        if (ptr == NULL) {
+            printf("Realloc failed\n");
+            free(promRes);
+            free(res);
+            return NULL;
+        }
+        res = ptr;
         strcpy(res, promRes);
         free(promRes);
     }
@@ -143,8 +147,7 @@ char * summ(int base, int count, ...) {
 }
 
 int main() {
-    //char * res = plus("1000", "288", 10);
-    char* res = summ(10, 4, "123", "165", "10000", "123456");
+    char* res = summ(10, 4, "123", "165", "123456789000", "1");
     printf("%s\n", res);
     free(res);
 }
