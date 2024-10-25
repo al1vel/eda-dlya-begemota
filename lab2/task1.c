@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
         printf("Flag <%s> is not supported.\n", argv[1]);
         return -1;
     }
-    printf("Flag returned: %d\n", ret);
+    //printf("Flag returned: %d\n", ret);
 
     switch (ret) {
         case 0: {
