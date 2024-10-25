@@ -122,6 +122,10 @@ char * summ(int base, int count, ...) {
     int len = strLength(firstSum);
 
     char *res = (char*)malloc((len + 1)*sizeof(char));
+    if (res == NULL) {
+        printf("malloc failed\n");
+        return NULL;
+    }
     strcpy(res, firstSum);
     free(firstSum);
 
