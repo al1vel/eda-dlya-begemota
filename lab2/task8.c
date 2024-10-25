@@ -139,7 +139,27 @@ char * summ(int base, int count, ...) {
 }
 
 int main() {
-    char* res = summ(10, 4, "123", "165", "123456789000", "1");
+    char* res;
+    res = summ(10, 0, "123", "165", "123456789000", "1");
     printf("%s\n", res);
+
+    res = summ(10, 1, "123", "165", "123456789000", "1");
+    printf("%s\n", res);
+
+    res = summ(10, 2, "123", "165", "123456789000", "1");
+    printf("%s\n", res);
+
+    res = summ(10, 4, "123", "165", "123456789000", "1");
+    printf("%s\n", res);
+
+    res = summ(16, 4, "1ab", "165", "1eff45", "65abc");
+    printf("%s\n", res);
+
+    res = summ(8, 5, "1766", "140005700", "763", "2367", "123456");
+    printf("%s\n", res);
+
+    res = summ(2, 5, "1011", "111111", "101", "11", "10101010111");
+    printf("%s\n", res);
+
     free(res);
 }
