@@ -1,1 +1,0 @@
-add_executable(lab1_task7 task7.cpp)
