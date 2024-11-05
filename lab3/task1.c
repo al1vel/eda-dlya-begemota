@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 int strLength(const char *str) {
     int res = 0;
@@ -44,15 +45,23 @@ int determineLen(int num) {
 }
 
 int getMask(int power) {
-    int res = 0, st = 0;
-    for (int i = 0; i < power; i++) {
-        res += pow(2, st);
-        st++;
+    int res = 0;
+    switch(power) {
+        case 1: res = 1;break;
+        case 2: res = 3;break;
+        case 3: res = 7;break;
+        case 4: res = 15;break;
+        case 5: res = 31;break;
+        default: res = -1;break;
     }
     return res;
 }
 
 char *func(int base, int num) {
+    if (base != 2 && base != 4 && base != 8 && base != 16 && base != 32) {
+        char *msg = "Invalid base number\0";
+        return msg;
+    }
     int power = powerOfBase(base), len = determineLen(num), mask = getMask(power);
     char *result = (char *)malloc(len);
     if (result == NULL) {
@@ -76,10 +85,12 @@ char *func(int base, int num) {
 }
 
 int main() {
-    char *res = func(4, 35);
+    char *res = func(32, 35);
     printf("%s\n", res);
 
+    if (strcmp(res, "Invalid base number\0") != 0) {
+        free(res);
+    }
 
-    free(res);
     return 0;
 }
