@@ -26,16 +26,18 @@ struct Node {
     int stationCoords;
     char* arrivalTime;
     char* departureTime;
+    int marker;
     struct Node *next;
 };
 
-struct Node* Create(int BusNum, int stCoords, char* arrivalTime, char* departureTime) {
+struct Node* Create(int BusNum, int stCoords, char* arrivalTime, char* departureTime, int marker) {
     struct Node* ptr = NULL;
     ptr = (struct Node*)malloc(sizeof(struct Node));
     ptr->BusNumber = BusNum;
     ptr->stationCoords = stCoords;
     ptr->arrivalTime = arrivalTime;
     ptr->departureTime = departureTime;
+    ptr->marker = marker;
     ptr->next = NULL;
     return ptr;
 }
@@ -129,7 +131,7 @@ int main(int argc, char *argv[]) {
 
             //printf("Bus #: %d\nArrTime: %s\nDepTime: %s\nMarker: %d\n\n", busNum, arrivalTime, departureTime, marker);
 
-            struct Node* busStoppedNode = Create(busNum, stationCoords, arrivalTime, departureTime);
+            struct Node* busStoppedNode = Create(busNum, stationCoords, arrivalTime, departureTime, marker);
             if (MainHead == NULL) {
                 struct Node* busHead = busStoppedNode;
                 struct NodeMain* Bus = CreateForMain(busHead);
@@ -157,7 +159,7 @@ int main(int argc, char *argv[]) {
         printf("-------------Bus Route -----------\n");
         struct Node* p = ptr->BusHead;
         while (p != NULL) {
-            printf("BusNum: %d\nSt.Coords: %d\nArrTime: %sDepTime: %s\n", p->BusNumber, p->stationCoords, p->arrivalTime, p->departureTime);
+            printf("BusNum: %d\nSt.Coords: %d\nArrTime: %sDepTime: %sMarker: %d\n\n", p->BusNumber, p->stationCoords, p->arrivalTime, p->departureTime, p->marker);
             p = p->next;
         }
 
