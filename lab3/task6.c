@@ -90,6 +90,20 @@ void deleteFromMain(struct NodeMain* pNode) {
     free(ptr);
 }
 
+int ValidateCommand(char* command) {
+    char c = '0';
+    for (int i = 0; i < 9; ++i) {
+        char st[2] = "0\0";
+        c++;
+        st[0] = c;
+        //printf("%s", st);
+        if (strcmp(command, st) == 0) {
+            return i + 1;
+        }
+    }
+    return -1;
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("You must provide files.");
@@ -129,7 +143,7 @@ int main(int argc, char *argv[]) {
             fgets(line, sizeof(line), file);
             marker = toInt(line);
 
-            //printf("Bus #: %d\nArrTime: %s\nDepTime: %s\nMarker: %d\n\n", busNum, arrivalTime, departureTime, marker);
+            //printf("Bus #: %d. Station: %d\nArrTime: %sDepTime: %sMarker: %d\n\n", busNum, stationCoords, arrivalTime, departureTime, marker);
 
             struct Node* busStoppedNode = Create(busNum, stationCoords, arrivalTime, departureTime, marker);
             if (MainHead == NULL) {
@@ -141,8 +155,27 @@ int main(int argc, char *argv[]) {
                 struct NodeMain* ptr = MainHead;
                 while (ptr != NULL) {
                     if (ptr->BusHead->BusNumber == busNum) {
+                        //printf("This bus\n");
                         thisBus = 1;
-                        Insert(ptr->BusHead, busStoppedNode);
+                        // if (marker == 0) {
+                        //     PushFront(&ptr->BusHead, busStoppedNode);
+                        // } else {
+                        if (strcmp(arrivalTime, ptr->BusHead->arrivalTime) < 0) {
+                            //printf("Cur arr time: %sHead arr time: %s", arrivalTime, ptr->BusHead->arrivalTime);
+                            //printf("Iz ifa\n\n\n");
+                            PushFront(&ptr->BusHead, busStoppedNode);
+                        } else {
+                            struct Node* busPtr = ptr->BusHead;
+                            while (busPtr->next != NULL) {
+                                if (strcmp(arrivalTime, busPtr->next->arrivalTime) < 0) {
+                                    break;
+                                }
+                                busPtr = busPtr->next;
+                            }
+                            //printf("Iz elsa\n\n\n");
+                            Insert(busPtr, busStoppedNode);
+                        }
+
                     }
                     ptr = ptr->next;
                 }
@@ -156,16 +189,37 @@ int main(int argc, char *argv[]) {
 
     struct NodeMain* ptr = MainHead;
     while (ptr != NULL) {
-        printf("-------------Bus Route -----------\n");
+        printf("------------- <%d> Bus Route -----------\n", ptr->BusHead->BusNumber);
         struct Node* p = ptr->BusHead;
         while (p != NULL) {
             printf("BusNum: %d\nSt.Coords: %d\nArrTime: %sDepTime: %sMarker: %d\n\n", p->BusNumber, p->stationCoords, p->arrivalTime, p->departureTime, p->marker);
             p = p->next;
         }
-
         ptr = ptr->next;
     }
 
+    printf("Enter command:\n"
+           "1. Bus with the biggest amount of routes\n"
+           "2. Bus with the smallest amount of routes\n"
+           "3. Bus with longest path\n"
+           "4. Bus with shortest path\n"
+           "5. Bus with longest route\n"
+           "6. Bus with shortest route\n"
+           "7. Bus with longest stop\n"
+           "8. Bus with shortest stop\n"
+           "9. Exit\n\n");
+
+    int flag = 1;
+    while (flag) {
+        char command[256];
+        scanf("%s", &command);
+        int com = ValidateCommand(command);
+        //printf("Command: %d\n", com);
+        switch (com) {
+            case -1: printf("Invalid Command\n"); break;
+            case 9: flag = 0; break;
+        }
+    }
 
     return 0;
 }
