@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 
 int strLength(const char *str) {
@@ -73,7 +72,7 @@ char *func(int base, int num) {
     while (num > 1) {
         ostatok = num & mask;
         num >>= power;
-        result[ind++] = (ostatok + '0');
+        result[ind++] = (ostatok > 9) ? (ostatok + 'A' - 10) : (ostatok + '0');
     }
     if (num == 1) {
         result[ind++] = '1';
@@ -84,13 +83,40 @@ char *func(int base, int num) {
     return reversed;
 }
 
-int main() {
-    char *res = func(32, 35);
-    printf("%s\n", res);
-
-    if (strcmp(res, "Invalid base number\0") != 0) {
-        free(res);
+void vizov(int base, int num) {
+    char *res = func(base, num);
+    if (strcmp(res, "Invalid base number\0") == 0) {
+        printf("Invalid base number: %d.\n", base);
+        return;
     }
+    printf("Number %d in <%d> number system is: %s\n", num, base, res);
+    free(res);
+}
+
+int main() {
+    vizov(0, 25);
+    vizov(1, 25);
+    vizov(3, 25);
+    vizov(33, 25);
+    vizov(-1, 25);
+
+    vizov(2, 25);
+    vizov(4, 25);
+    vizov(8, 25);
+    vizov(16, 25);
+    vizov(32, 25);
+
+    vizov(2, 152);
+    vizov(4, 152);
+    vizov(8, 152);
+    vizov(16, 152);
+    vizov(32, 152);
+
+    vizov(2, 251);
+    vizov(4, 251);
+    vizov(8, 251);
+    vizov(16, 251);
+    vizov(32, 251);
 
     return 0;
 }
