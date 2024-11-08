@@ -40,6 +40,7 @@ struct Employee {
     char* name;
     char* surname;
     float salary;
+    char* salary_str;
 };
 
 int is_number(const char* s) {
@@ -81,6 +82,7 @@ int is_float(const char* s) {
 int is_str(const char* s) {
     while (*s) {
         if (!isalpha(*s)) {
+            printf("huinya: <%c>\n", *s);
             return NOT_A_STR;
         }
         s++;
@@ -118,118 +120,127 @@ unsigned int StrToUint(const char* s) {
 }
 
 int newEmployee(FILE *infile, struct Employee* emp) {
-    char cur = '\0';
-    char *lexeme = (char*)malloc(sizeof(char));
-    int ind_in_lexeme = 0;
-    int ind_of_data = 0;
-    while (cur != EOF && cur != '\n') {
-        cur = (char)fgetc(infile);
-        if (cur == EOF && ind_of_data != 3) {
+    char curSym = '\0';
+    char *data = (char*)malloc(sizeof(char));
+    int data_ind = 0;
+    int data_type = 0;
+    while (curSym != EOF && curSym != '\n') {
+        curSym = (char)fgetc(infile);
+        //printf("char <%c>\n", curSym);
+        if (curSym == EOF && data_type != 3) {
             return FILE_ENDED;
         }
-        if (cur != '\n' && cur != ' ' && cur != EOF) {
-            lexeme[ind_in_lexeme++] = cur;
-            if (ind_in_lexeme >= strlen(lexeme)) {
-                char *ptr;
-                ptr = (char*) realloc(lexeme, 2 * strlen(lexeme) * sizeof(char));
+        if (curSym != '\n' && curSym != ' ' && curSym != EOF) {
+            //printf("<%c> ", curSym);
+            data[data_ind] = curSym;
+            //printf("data: %c\n", data[data_ind]);
+            data_ind++;
+            if (data_ind >= strlen(data)) {
+                char *ptr = (char *)realloc(data, 2 * (int)sizeof(data) * sizeof(char));
                 if (ptr == NULL) {
-                    free(lexeme);
+                    free(data);
                     return MEMORY_ALLOCATION_ERROR;
                 }
-                lexeme = ptr;
+                data = ptr;
             }
         } else {
-            if (!ind_in_lexeme) {
+            if (!data_ind) {
                 continue;
             }
-            lexeme[ind_in_lexeme] = '\0';
+            data[data_ind] = '\0';
+            //printf("DATA S 0 <%s> ", data);
             int code;
-            switch (ind_of_data) {
+            switch (data_type) {
                 case 0:
-                    if ((code = is_number(lexeme))) {
-                        free(lexeme);
+                    if ((code = is_number(data))) {
+                        free(data);
                         return code;
                     }
-                    emp->id = StrToUint(lexeme);
+                    emp->id = StrToUint(data);
                     break;
                 case 1:
-                    if ((code = is_str(lexeme))) {
-                        free(lexeme);
+                    if ((code = is_str(data)) != SUCCESS) {
+                        //printf("name\n");
+                        free(data);
                         return code;
                     }
-                    emp->name = (char*) malloc(sizeof(char) * strlen(lexeme));
-                    strcpy(emp->name, lexeme);
+                    emp->name = (char*)malloc(sizeof(char) * strlen(data));
+                    strcpy(emp->name, data);
+                    //printf("Name: <%s>\n", emp->name);
                     break;
                 case 2:
-                    if ((code = is_str(lexeme))) {
-                        free(lexeme);
+                    if ((code = is_str(data)) != SUCCESS) {
+                        //printf("surname: <%s>\n", data);
+                        free(data);
                         return code;
                     }
-                    emp->surname = (char*) malloc(sizeof(char) * strlen(lexeme));
-                    strcpy(emp->surname, lexeme);
+                    emp->surname = (char*)malloc(sizeof(char) * strlen(data));
+                    strcpy(emp->surname, data);
                     break;
                 case 3:
-                    if ((code = is_float(lexeme))) {
-                        free(lexeme);
+                    if ((code = is_float(data))) {
+                        free(data);
                         return code;
                     }
-                    emp->salary = atof(lexeme);
+                    emp->salary = atof(data);
+                    emp->salary_str = (char*)malloc(sizeof(char) * strlen(data));
+                    strcpy(emp->salary_str, data);
                     break;
                 default:
                     printf("Something went wrong!\n");
                     break;
             }
-            ind_of_data++;
-            ind_in_lexeme = 0;
+            data_type++;
+            data_ind = 0;
         }
     }
-    free(lexeme);
-    if (ind_of_data != 4) {
+    free(data);
+    if (data_type != 4) {
         printf("Wrong number of arguments.");
         return ERROR_WRONG_NUMB_OF_ARGS;
     }
     return SUCCESS;
 }
 
-int cmpForD(const void* y1, const void* y2) {
+int comporatorD(const void* y1, const void* y2) {
     struct Employee* x1 = (struct Employee*)y1;
     struct Employee* x2 = (struct Employee*)y2;
     int res;
-    if (x1->salary < x2->salary) {
+    if (strcmp(x1->salary_str, x2->salary_str) < 0) {
         return 1;
-    } else if (x1->salary > x2->salary) {
+    } else if (strcmp(x1->salary_str, x2->salary_str) > 0) {
         return -1;
     } else {
-        if (!(res = strcmp(x1->surname, x2->surname))) {
+        if ((res = strcmp(x1->surname, x2->surname)) != 0) {
             return res;
         }
-
-        if (!(res = strcmp(x1->name, x2->name))) {
+        if ((res = strcmp(x1->name, x2->name)) != 0) {
             return res;
         }
         if (x1->id < x2->id) {
+            //printf("hui\n");
             return 1;
         } else if (x1->id > x2->id) {
+            //printf("hui2\n");
             return -1;
         }
         return 0;
     }
 }
 
-int cmpForA(const void* y1, const void* y2) {
+int comporatorA(const void* y1, const void* y2) {
     struct Employee* x1 = (struct Employee*)y1;
     struct Employee* x2 = (struct Employee*)y2;
     int res;
-    if (x1->salary < x2->salary) {
+    if (strcmp(x1->salary_str, x2->salary_str) < 0) {
         return -1;
-    } else if (x1->salary > x2->salary) {
+    } else if (strcmp(x1->salary_str, x2->salary_str) > 0) {
         return 1;
     } else {
-        if (!(res = strcmp(x1->surname, x2->surname))) {
+        if ((res = strcmp(x1->surname, x2->surname)) != 0) {
             return res;
         }
-
-        if (!(res = strcmp(x1->name, x2->name))) {
+        if ((res = strcmp(x1->name, x2->name)) != 0) {
             return res;
         }
         if (x1->id < x2->id) {
@@ -242,10 +253,8 @@ int cmpForA(const void* y1, const void* y2) {
 }
 
 int findFlag(char* fl, const char** flags, int size) {
-    for (int i = 0; i < size; ++i)
-    {
-        if (!(strcmp(fl, flags[i])))
-        {
+    for (int i = 0; i < size; ++i) {
+        if (!(strcmp(fl, flags[i]))) {
             return i;
         }
     }
@@ -268,9 +277,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    FILE *infile, *outfile;
-    infile = fopen(argv[1], "r");
-    outfile = fopen(argv[3], "w");
+    FILE *infile = fopen(argv[1], "r");
+    FILE *outfile = fopen(argv[3], "w");
 
     if (infile == NULL || outfile == NULL) {
         ValidateCode(FILE_OPENING_ERROR);
@@ -286,6 +294,7 @@ int main(int argc, char* argv[]) {
             for (int i = 0; i < ind; ++i) {
                 free(emp[i].name);
                 free(emp[i].surname);
+                free(emp[i].salary_str);
             }
             free(emp);
             ValidateCode(code);
@@ -300,6 +309,7 @@ int main(int argc, char* argv[]) {
                 for (int i = 0; i < ind; ++i) {
                     free(emp[i].name);
                     free(emp[i].surname);
+                    free(emp[i].salary_str);
                 }
                 free(emp);
                 ValidateCode(MEMORY_ALLOCATION_ERROR);
@@ -318,9 +328,9 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     if (ret < 2) {
-        qsort(emp, ind, sizeof(struct Employee), cmpForA);
+        qsort(emp, ind, sizeof(struct Employee), comporatorA);
     } else {
-        qsort(emp, ind, sizeof(struct Employee), cmpForD);
+        qsort(emp, ind, sizeof(struct Employee), comporatorD);
     }
     for (int i = 0; i < ind; ++i) {
         fprintf(outfile, "| Id: %-3u| Name: %-10s| Surname: %-10s| Salary: %-7.3f|\n", emp[i].id, emp[i].name, emp[i].surname, emp[i].salary);
@@ -334,6 +344,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < ind; ++i) {
         free(emp[i].name);
         free(emp[i].surname);
+        free(emp[i].salary_str);
     }
     free(emp);
     return 0;
