@@ -460,7 +460,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     char answer[2];
-    printf("Do you need students that have average estimate above average estimate of all students\nYour answer (y \\ n): ");
+    printf("Do you need students that have average mark above average mark of all students\nYour answer (y \\ n): ");
     scanf("%s", answer);
     if (strcmp(answer, "y") == 0) {
         fputs("Students that have average estimate above average estimate of all students:\n", fileOut);
