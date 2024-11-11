@@ -406,7 +406,7 @@ int main(int argc, char *argv[]) {
         printf("Enter command: ");
         scanf("%s", &command);
         int com = ValidateCommand(command);
-        printf("Command: %d\n", com);
+        //printf("Command: %d\n", com);
         switch (com) {
             case -1: printf("Invalid Command\n"); break;
             case 0: Print(MainHead); break;
@@ -422,18 +422,18 @@ int main(int argc, char *argv[]) {
             default: printf("No way\n");break;
         }
     }
-
-    while (MainHead != NULL) {
-        struct NodeMain* p = MainHead->next;
-        struct Node* busHead = p->BusHead;
-        while (busHead != NULL) {
-            struct Node* next = busHead->next;
-            free(busHead);
-            busHead = next;
+    if (MainHead != NULL) {
+        while (MainHead->next != NULL) {
+            struct NodeMain* p = MainHead->next;
+            struct Node* busHead = p->BusHead;
+            while (busHead != NULL) {
+                struct Node* next = busHead->next;
+                free(busHead);
+                busHead = next;
+            }
+            free(MainHead);
+            MainHead = p;
         }
-        free(MainHead);
-        MainHead = p;
     }
-
     return 0;
 }
