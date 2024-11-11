@@ -144,11 +144,15 @@ int main(int argc, char *argv[]) {
                     struct Macro *ptr = HashTable[hash];
                     while (ptr != NULL) {
                         if (strcmp(ptr->directive, buf) == 0) {
-                            printf("HUI\n");
+                            //printf("HUI\n");
                             char *val = ptr->value;
                             while (*val != '\0') {
                                 inFileBuf[fileInd] = *val;
-                                printf("IF <%c> | V <%c>\n", inFileBuf[fileInd], *val);
+                                // for (int k = 0; k < fileInd; k++) {
+                                //     printf("<%c> ", inFileBuf[k]);
+                                // }
+                                // printf("\n");
+
                                 fileInd++;
                                 val++;
                             }
@@ -158,19 +162,21 @@ int main(int argc, char *argv[]) {
                         ptr = ptr->next;
                     }
                 } else {
-                    for (int j = 0; j < strlen(buf) + 1; j++) {
+                    for (int j = 0; j < strlen(buf); j++) {
                         inFileBuf[fileInd] = buf[j];
                         fileInd++;
                     }
+                    inFileBuf[fileInd] = ' ';
+                    fileInd++;
                 }
-
             } else {
                 buf[ind] = line[i];
                 ind++;
             }
             if (line[i] == '\n' || line[i] == '\0') {
+                inFileBuf[fileInd] = '\n';
+                fileInd++;
                 inFileBuf[fileInd] = '\0';
-                printf("Str: <%s>\n", inFileBuf);
                 fprintf(temp, "%s", inFileBuf);
                 break;
             }
@@ -181,7 +187,6 @@ int main(int argc, char *argv[]) {
     //Clear
     for (int i = 0; i < TableSize-1; i++) {
         if (HashTable[i] != NULL) {
-            //printf("%d\n", i);
             struct Macro *pNext = HashTable[i]->next;
             while (pNext != NULL) {
                 free(pNext->directive);
