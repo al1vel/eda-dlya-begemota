@@ -1,6 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+int GetHash(char *directive) {
+    int res = 0, base = 62;;
+    char *p = directive;
+
+    while (*p) {
+        if (isalpha(*p)) {
+            res = res * base + (((*p >= 'A') && (*p <= 'Z')) ? (*p - 'A' + 10) : (*p - 'a' + 10 + 26));
+            p++;
+        }
+        else {
+            res = res * base + *p++ - '0';
+        }
+    }
+    return res;
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -14,7 +31,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    char* HashTable[128];
+    int TableSize = 128;
+    char* HashTable[TableSize] = {NULL};
 
     int cont = 1, debugCnt = 0;
     char line[BUFSIZ];
@@ -43,6 +61,7 @@ int main(int argc, char *argv[]) {
                 }
                 directive[ind] = '\0';
                 ind = 0;
+                i++;
                 while (line[i] != '\n') {
                     value[ind] = line[i];
                     i++;
@@ -50,6 +69,11 @@ int main(int argc, char *argv[]) {
                 }
                 value[ind] = '\0';
                 printf("Dir: <%s>. Val: <%s>.\n", directive, value);
+                int hash = GetHash(directive) % TableSize;
+                printf("Hash: %d\n", hash);
+                strcpy(HashTable[hash], value);
+                free(directive);
+                free(value);
             }
         } else if (line[0] == '\n') {
             continue;
@@ -58,7 +82,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    while (fgets(line, sizeof(line), file) != NULL) {
 
+    }
 
     return 0;
 }
