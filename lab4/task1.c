@@ -37,7 +37,9 @@ void Clear(struct Macro ***HashTable, int TableSize) {
                 free(temp);
             }
             (*HashTable)[i] = NULL;
+            //printf("%d FREE--\n", i);
         }
+        //printf("%d null\n", i);
     }
     free(*HashTable);
 }
@@ -75,7 +77,7 @@ int main(int argc, char *argv[]) {
         }
 
         debugCnt++;
-        printf("DC: %d\n", debugCnt);
+        //printf("DC: %d\n", debugCnt);
         int len = (int)strlen(line);
         if (len > 11) {
             char word[8];
@@ -104,9 +106,9 @@ int main(int argc, char *argv[]) {
                     ind++;
                 }
                 value[ind] = '\0';
-                printf("Dir: <%s>. Val: <%s>.\n", directive, value);
+                //printf("Dir: <%s>. Val: <%s>.\n", directive, value);
                 int hash = GetHash(directive, TableSize) % TableSize;
-                printf("Hash: %d\n", hash);
+                //printf("Hash: %d\n", hash);
 
                 struct Macro* curMacro = malloc(sizeof(struct Macro));
                 curMacro->directive = (char *)malloc(len);
@@ -119,15 +121,17 @@ int main(int argc, char *argv[]) {
 
                 if (HashTable[hash] == NULL) {
                     HashTable[hash] = curMacro;
+                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", directive, value, hash);
                 } else {
                     curChain = 1;
                     struct Macro *ptr = HashTable[hash];
                     while (ptr->next != NULL) {
                         ptr = ptr->next;
                         curChain++;
-                        printf("Chain: %d\n", curChain);
+                        //printf("Chain: %d\n", curChain);
                     }
                     ptr->next = curMacro;
+                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", directive, value, hash);
                     if (curChain > maxChain) {
                         maxChain = curChain;
                     }
@@ -135,20 +139,42 @@ int main(int argc, char *argv[]) {
                         minChain = curChain;
                     }
                     if ((maxChain / minChain) >= 2) {
-                        TableSize *= 2;
-                        struct Macro **p = realloc(HashTable, sizeof(struct Macro*) * TableSize);
+                        TableSize += 100;
+                        struct Macro **p = malloc(sizeof(struct Macro*) * TableSize);
                         if (p == NULL) {
                             Clear(&HashTable, TableSize);
                             printf("Error reallocating memory.\n");
                             return -1;
                         }
-                        HashTable = p;
-
-                        for (int j = TableSize / 2 - 1; j < TableSize; j++) {
-                            HashTable[j] = NULL;
+                        for (int j = 0; j < TableSize; j++) {
+                            p[j] = NULL;
                         }
+                        for (int j = 0; j < (TableSize - 100); ++j) {
+                            if (HashTable[j] != NULL) {
+                                struct Macro *tmp = HashTable[j];
+                                while (tmp != NULL) {
+                                    printf("D: %s; V: %s\n", tmp->directive, tmp->value);
+                                    hash = GetHash(tmp->directive, TableSize) % TableSize;
+                                    printf("Dir: <%s>. New hash: %d\n", tmp->directive, hash);
+                                    if (p[hash] == NULL) {
+                                        p[hash] = tmp;
+                                        p[hash]->next = NULL;
+                                    } else {
+                                        struct Macro *pointer = p[hash];
+                                        while (pointer->next != NULL) {
+                                            pointer = pointer->next;
+                                        }
+                                        pointer->next = tmp;
+                                        pointer->next->next = NULL;
+                                    }
+                                    tmp = tmp->next;
+                                }
+                            }
+                        }
+                        HashTable = p;
+                        printf("REALLOCATED\n");
                     }
-                    printf("REALLOCATED\n");
+
                 }
             } else {
                 cont = 0;
@@ -191,15 +217,9 @@ int main(int argc, char *argv[]) {
                     struct Macro *ptr = HashTable[hash];
                     while (ptr != NULL) {
                         if (strcmp(ptr->directive, buf) == 0) {
-                            //printf("HUI\n");
                             char *val = ptr->value;
                             while (*val != '\0') {
                                 inFileBuf[fileInd] = *val;
-                                // for (int k = 0; k < fileInd; k++) {
-                                //     printf("<%c> ", inFileBuf[k]);
-                                // }
-                                // printf("\n");
-
                                 fileInd++;
                                 val++;
                             }
