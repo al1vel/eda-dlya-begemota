@@ -25,6 +25,23 @@ struct Macro {
     struct Macro *next;
 };
 
+void Clear(struct Macro ***HashTable, int TableSize) {
+    for (int i = 0; i < TableSize; i++) {
+        if ((*HashTable)[i] != NULL) {
+            struct Macro *current = (*HashTable)[i];
+            while (current != NULL) {
+                struct Macro *temp = current;
+                current = current->next;
+                free(temp->directive);
+                free(temp->value);
+                free(temp);
+            }
+            (*HashTable)[i] = NULL;
+        }
+    }
+    free(*HashTable);
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("File must be inputted.\n");
@@ -37,19 +54,20 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    FILE *temp = fopen("D:\\temp.txt", "w");
+    FILE *temp = fopen("C:\\begemotik\\temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return -1;
     }
 
     int TableSize = 128;
-    struct Macro* HashTable[TableSize];
+    //struct Macro* HashTable[TableSize];
+    struct Macro **HashTable = (struct Macro**)malloc(sizeof(struct Macro*) * TableSize);
     for (int i = 0; i < TableSize; i++) {
         HashTable[i] = NULL;
     }
 
-    int cont = 1, debugCnt = 0;
+    int cont = 1, debugCnt = 0, maxChain = 0, curChain = 0, minChain = 1000000;
     char line[BUFSIZ];
     while (cont) {
         if (fgets(line, sizeof(line), file) == NULL) {
@@ -102,7 +120,35 @@ int main(int argc, char *argv[]) {
                 if (HashTable[hash] == NULL) {
                     HashTable[hash] = curMacro;
                 } else {
-                    HashTable[hash]->next = curMacro;
+                    curChain = 1;
+                    struct Macro *ptr = HashTable[hash];
+                    while (ptr->next != NULL) {
+                        ptr = ptr->next;
+                        curChain++;
+                        printf("Chain: %d\n", curChain);
+                    }
+                    ptr->next = curMacro;
+                    if (curChain > maxChain) {
+                        maxChain = curChain;
+                    }
+                    if (curChain < minChain) {
+                        minChain = curChain;
+                    }
+                    if ((maxChain / minChain) >= 2) {
+                        TableSize *= 2;
+                        struct Macro **p = realloc(HashTable, sizeof(struct Macro*) * TableSize);
+                        if (p == NULL) {
+                            Clear(&HashTable, TableSize);
+                            printf("Error reallocating memory.\n");
+                            return -1;
+                        }
+                        HashTable = p;
+
+                        for (int j = TableSize / 2 - 1; j < TableSize; j++) {
+                            HashTable[j] = NULL;
+                        }
+                    }
+                    printf("REALLOCATED\n");
                 }
             } else {
                 cont = 0;
@@ -116,7 +162,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    for (int i = 0; i < TableSize - 1; i++) {
+    for (int i = 0; i < TableSize; i++) {
         if (HashTable[i] != NULL) {
             printf("%d | Dir: <%s> | Val: <%s>\n", i, HashTable[i]->directive, HashTable[i]->value);
             struct Macro *ptr = HashTable[i]->next;
@@ -126,6 +172,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    printf("MaxChain: %d; MinChain: %d\n", maxChain, minChain);
 
     printf("\n----SECOND PART----\n\n");
 
@@ -185,19 +232,9 @@ int main(int argc, char *argv[]) {
 
 
     //Clear
-    for (int i = 0; i < TableSize-1; i++) {
-        if (HashTable[i] != NULL) {
-            struct Macro *pNext = HashTable[i]->next;
-            while (pNext != NULL) {
-                free(pNext->directive);
-                free(pNext->value);
-                pNext = pNext->next;
-            }
-            free(HashTable[i]->directive);
-            free(HashTable[i]->value);
-            free(HashTable[i]);
-        }
-    }
+    printf("cl1\n");
+    Clear(&HashTable, TableSize);
+    printf("cl2\n");
 
     fclose(file);
     fclose(temp);
