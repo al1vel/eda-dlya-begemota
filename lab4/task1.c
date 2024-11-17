@@ -56,14 +56,13 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    FILE *temp = fopen("C:\\begemotik\\temp.txt", "w");
+    FILE *temp = fopen("D:\\temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return -1;
     }
 
     int TableSize = 128;
-    //struct Macro* HashTable[TableSize];
     struct Macro **HashTable = (struct Macro**)malloc(sizeof(struct Macro*) * TableSize);
     for (int i = 0; i < TableSize; i++) {
         HashTable[i] = NULL;
@@ -75,7 +74,6 @@ int main(int argc, char *argv[]) {
         if (fgets(line, sizeof(line), file) == NULL) {
             cont = 0;
         }
-
         debugCnt++;
         //printf("DC: %d\n", debugCnt);
         int len = (int)strlen(line);
@@ -121,7 +119,7 @@ int main(int argc, char *argv[]) {
 
                 if (HashTable[hash] == NULL) {
                     HashTable[hash] = curMacro;
-                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", directive, value, hash);
+                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", curMacro->directive, curMacro->value, hash);
                 } else {
                     curChain = 1;
                     struct Macro *ptr = HashTable[hash];
@@ -131,7 +129,7 @@ int main(int argc, char *argv[]) {
                         //printf("Chain: %d\n", curChain);
                     }
                     ptr->next = curMacro;
-                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", directive, value, hash);
+                    printf("Dir: <%s>. Val: <%s>. HASH: %d\n", curMacro->directive, curMacro->value, hash);
                     if (curChain > maxChain) {
                         maxChain = curChain;
                     }
