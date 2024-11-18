@@ -2,11 +2,16 @@
 
 #define hui 55
 #define blya 101
+#define blyayu HUINYA
 #define pohui PIDOR
 
 #define ahahc AHAH
+#define pohua8 PIDOR
+
+#define poW PIDORAS
 
 wgnigninain hui awoifnawngi blya iegf
 uwnfun qwiofniqw ahah einghiehahah agin
 ioehnhoweeniwgh pohui wnegheuiowh pohui nwegn
 ioqwgnig ahah hui
+pohua8 gg ahahc blyayu poW
