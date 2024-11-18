@@ -1,5 +1,6 @@
 add_executable(lab2_task1 task1.c)
 add_executable(lab2_task2 task2.c)
 add_executable(lab2_task3 task3.c)
+add_executable(lab2_task4 task4.c)
 add_executable(lab2_task7 task7.c)
 add_executable(lab2_task8 task8.c)
