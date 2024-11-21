@@ -70,9 +70,9 @@ int IsConvex(int count, ...) {
 
     int n = count / 2;
 
-    for (int i = 0; i < n; i++) {
-        printf("X: %f | Y: %f\n", array[i].x, array[i].y);
-    }
+    // for (int i = 0; i < n; i++) {
+    //     printf("X: %f | Y: %f\n", array[i].x, array[i].y);
+    // }
 
     double sign = 0;
     for (int i = 0; i < n; i++) {
@@ -147,7 +147,8 @@ int FromBaseTo10 (const int base, char *str) {
 char * From10toBase(int num, int base) {
     char buf[BUFSIZ], *p = buf + BUFSIZ - 1;
     int r;
-    *p-- = 0;
+    *p-- = '\0';
+    //*p-- = 0;
 
     if (num < 0) {
         num = -num;
@@ -192,11 +193,12 @@ int Validate(const char* argv, int base) {
     return VALID;
 }
 
-int strLength(const char *str) {
+int strLength(char *str) {
+    char * p = str;
     int res = 0;
-    while (*str != '\0') {
+    while (*p != '\0') {
         res++;
-        str++;
+        p++;
     }
     return res;
 }
@@ -228,8 +230,8 @@ int IsKaprekar(char * num, int base) {
     int square = number * number;
 
     int numLen = strLength(num);
-    char * sq = IntToString(square);
-    printf("Sq: %s\n", sq);
+    char * sq = From10toBase(square, base);
+    //printf("Sq: %s\n", sq);
 
     int sqLen = strLength(sq);
     int lSize = sqLen - numLen;
@@ -256,9 +258,9 @@ int IsKaprekar(char * num, int base) {
     for (int i = 0; i < numLen; ++i) {
         R[i] = sq[sqLen - numLen + i];
     }
-    printf("L: <%s> | R: <%s>\n", L, R);
+    //printf("L: <%s> | R: <%s>\n", L, R);
 
-    if ((FromBaseTo10(10, L) + FromBaseTo10(10, R)) == number) {
+    if ((FromBaseTo10(base, L) + FromBaseTo10(base, R)) == number) {
         free(L);
         free(R);
         free(sq);
@@ -309,7 +311,9 @@ int main() {
 
     printf("%f\n", PolynomeValue(0.5, 6, 19, 5, 0, 4, -10, 0, -100));
 
-    ret = FindKaprekar(10, 3, "9", "297", "2223");
-    ValidateCode(ret);
+    ret = FindKaprekar(16, 3, "6", "f", "88");
+    if (ret != SUCCESS) {
+        ValidateCode(ret);
+    }
     return 0;
 }
