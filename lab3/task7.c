@@ -13,9 +13,26 @@ struct Liver {
     char * name;
     char * otchestvo;
     char * birthday;
-    char * gender;
-    double * salary;
+    char gender;
+    double salary;
 };
+
+char * GetReversedDate(char * date) {
+    char * revDate = (char*)malloc(sizeof(char) * 11);
+    revDate[10] = '\0';
+    for (int i = 0; i < 4; ++i) {
+        revDate[i] = date[6 + i];
+    }
+    revDate[4] = '.';
+    for (int i = 5; i < 7; ++i) {
+        revDate[i] = date[i - 2];
+    }
+    revDate[7] = '.';
+    for (int i = 8; i < 10; ++i) {
+        revDate[i] = date[i - 8];
+    }
+    return revDate;
+}
 
 //--------------------------------------------------LIST------------------------------------------------------
 struct Node {
@@ -51,72 +68,110 @@ void delete(struct Node* pNode) {
     pNode->next = ptr->next;
     free(ptr);
 }
-//--------------------------------------------------LIST------------------------------------------------------
 
-int GetPersonInfo (FILE* file, char *surname, char *name, char *otchestvo, char *birthday, char *gender, double *salary) {
-    char line[BUFSIZ];
+void InsertLiver(struct Node ** head, struct Liver * newLiver) {
+    struct Node * newNode = Create(newLiver);
+    if ((*head) == NULL) {
+        (*head) = newNode;
+    } else {
+        char * newBDrev = GetReversedDate(newLiver->birthday);
+        char * headBDrev = GetReversedDate((*head)->liver->birthday);
+        if (strcmp(newBDrev, headBDrev) > 0) {
+            PushFront(head, newNode);
+        } else {
+            struct Node* ptr = *head;
+            int flag = 0;
 
-    //name
-    if (fgets(line, BUFSIZ, file) == NULL) {
-        return 0;
+            while (ptr->next != NULL) {
+                char * ptrBDrev = GetReversedDate(ptr->next->liver->birthday);
+                if (strcmp(newBDrev, ptrBDrev) > 0) {
+                    Insert(ptr, newNode);
+                    flag = 1;
+                    break;
+                }
+                ptr = ptr->next;
+                free(ptrBDrev);
+            }
+            if (!flag) {
+                Insert(ptr, newNode);
+            }
+
+        }
+        free(newBDrev);
+        free(headBDrev);
     }
-    int len = (int)strlen(line);
-    surname = (char*)malloc(len + 1);
-    line[len - 1] = '\0';
-    strcpy(surname, line);
-
-
-    //surname
-    fgets(line, BUFSIZ, file);
-    len = strlen(line);
-    name = (char*)malloc(len + 1);
-    line[len - 1] = '\0';
-    strcpy(name, line);
-
-    //otchestvo
-    fgets(line, BUFSIZ, file);
-    len = strlen(line);
-    otchestvo = (char*)malloc(len + 1);
-    line[len - 1] = '\0';
-    strcpy(otchestvo, line);
-
-    //birthday
-    fgets(line, BUFSIZ, file);
-    len = strlen(line);
-    birthday = (char*)malloc(len + 1);
-    line[len - 1] = '\0';
-    strcpy(birthday, line);
-
-    //gender
-    fgets(line, BUFSIZ, file);
-    len = strlen(line);
-    line[len - 1] = '\0';
-    gender = (char*)malloc(2);
-    strcpy(gender, line);
-
-    //salary
-    fgets(line, BUFSIZ, file);
-    len = strlen(line);
-    char * salaryStr = (char*)malloc(len + 1);
-    strcpy(salaryStr, line);
-    double sal = atof(salaryStr);
-    salary = (double*)malloc(sizeof(double));
-    *salary = sal;
-    return 1;
 }
 
-struct Liver * CreateLiver (char * surname, char * name, char * otchestvo, char * birthday, char * gender, double * salary) {
+void Display(struct Node* head) {
+    struct Node* ptr;
+    ptr = head;
+    int index = 0;
+    while (ptr != NULL) {
+        printf("--------------- LIVER %d ---------------\n", index);
+        printf("Surname: %s\n", ptr->liver->surname);
+        printf("Name: %s\n", ptr->liver->name);
+        printf("Otchestvo: %s\n", ptr->liver->otchestvo);
+        printf("Birthday: %s\n", ptr->liver->birthday);
+        printf("Gender: %c\n", ptr->liver->gender);
+        printf("Salary: %.3lf\n", ptr->liver->salary);
+        printf("----------------------------------------\n\n");
+        ptr = ptr->next;
+        index++;
+    }
+}
+//--------------------------------------------------LIST------------------------------------------------------
+
+
+struct Liver * GetLiver (FILE* file) {
     struct Liver * liver = (struct Liver*)malloc(sizeof(struct Liver));
     if (liver == NULL) {
         printf("Memory allocation error while creating liver.\n");
         return NULL;
     }
-    liver->surname = surname;
-    liver->name = name;
-    liver->otchestvo = otchestvo;
-    liver->birthday = birthday;
-    liver->gender = gender;
-    liver->salary = salary;
+
+    char line[BUFSIZ];
+
+    //surname
+    if (fgets(line, BUFSIZ, file) == NULL) {
+        return NULL;
+    }
+    int len = (int)strlen(line);
+    liver->surname = (char*)malloc(len + 1);
+    line[len - 1] = '\0';
+    strcpy(liver->surname, line);
+
+    //name
+    fgets(line, BUFSIZ, file);
+    len = (int)strlen(line);
+    liver->name = (char*)malloc(len + 1);
+    line[len - 1] = '\0';
+    strcpy(liver->name, line);
+
+    //otchestvo
+    fgets(line, BUFSIZ, file);
+    len = (int)strlen(line);
+    liver->otchestvo = (char*)malloc(len + 1);
+    line[len - 1] = '\0';
+    strcpy(liver->otchestvo, line);
+
+    //birthday
+    fgets(line, BUFSIZ, file);
+    len = (int)strlen(line);
+    liver->birthday = (char*)malloc(len + 1);
+    line[len - 1] = '\0';
+    strcpy(liver->birthday, line);
+
+    //gender
+    fgets(line, BUFSIZ, file);
+    len = (int)strlen(line);
+    line[len - 1] = '\0';
+    liver->gender = line[0];
+
+    //salary
+    fgets(line, BUFSIZ, file);
+    double sal = atof(line);
+    liver->salary = sal;
+
     return liver;
 }
 
@@ -132,22 +187,16 @@ int main(int argc ,char *argv[]) {
         return FAILED_OPEN_FILE;
     }
 
-
+    struct Node* head = NULL;
 
     while (1) {
-        char * surname, name, otchestvo, birthday, gender;
-        double * salary = 0;
-        printf("hui\n");
-        int ret = GetPersonInfo(file, &surname, &name, &otchestvo, &birthday, &gender, &salary);
-        if (ret == 0) {
+        struct Liver * liver = GetLiver(file);
+        if (liver == 0) {
             break;
         }
-        printf("hui2\n");
-        printf("%s\n", surname);
-        struct Liver * liver = CreateLiver(surname, name, otchestvo, birthday, gender, salary);
-        printf("%s\n%s\n%s\n%s\n%c\n%lf\n\n", liver->surname, liver->name, liver->otchestvo, liver->birthday, liver->gender, liver->salary);
+        InsertLiver(&head, liver);
     }
-
+    Display(head);
 
     return SUCCESS;
 }
