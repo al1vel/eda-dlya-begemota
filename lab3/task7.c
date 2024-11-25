@@ -19,6 +19,7 @@ struct Liver {
 
 char * GetReversedDate(char * date) {
     char * revDate = (char*)malloc(sizeof(char) * 11);
+    printf("Allocated in GetReversedDate\n");
     revDate[10] = '\0';
     for (int i = 0; i < 4; ++i) {
         revDate[i] = date[6 + i];
@@ -43,6 +44,7 @@ struct Node {
 struct Node* Create(struct Liver * liver) {
     struct Node* ptr = NULL;
     ptr = (struct Node*)malloc(sizeof(struct Node));
+    printf("Allocated in Create\n");
     if (ptr == NULL) {
         printf("Memory allocation error while creating node.\n");
         return NULL;
@@ -91,6 +93,7 @@ void InsertLiver(struct Node ** head, struct Liver * newLiver) {
                 }
                 ptr = ptr->next;
                 free(ptrBDrev);
+                printf("free reversed\n");
             }
             if (!flag) {
                 Insert(ptr, newNode);
@@ -98,7 +101,9 @@ void InsertLiver(struct Node ** head, struct Liver * newLiver) {
 
         }
         free(newBDrev);
+        printf("free reversed\n");
         free(headBDrev);
+        printf("free reversed\n");
     }
 }
 
@@ -119,15 +124,31 @@ void Display(struct Node* head) {
         index++;
     }
 }
+
+void Clear(struct Node** head) {
+    struct Node* ptr;
+    int index = 0;
+    while (*head != NULL) {
+        ptr = *head;
+        *head = (*head)->next;
+        free(ptr->liver->name);
+        free(ptr->liver->surname);
+        free(ptr->liver->otchestvo);
+        free(ptr->liver->birthday);
+        free(ptr->liver);
+        printf("free liver\n");
+        free(ptr);
+        printf("free ptr\n");
+        printf("%d\n", index);
+        index++;
+    }
+    *head = NULL;
+}
 //--------------------------------------------------LIST------------------------------------------------------
 
 
 struct Liver * GetLiver (FILE* file) {
-    struct Liver * liver = (struct Liver*)malloc(sizeof(struct Liver));
-    if (liver == NULL) {
-        printf("Memory allocation error while creating liver.\n");
-        return NULL;
-    }
+
 
     char line[BUFSIZ];
 
@@ -135,6 +156,14 @@ struct Liver * GetLiver (FILE* file) {
     if (fgets(line, BUFSIZ, file) == NULL) {
         return NULL;
     }
+
+    struct Liver * liver = (struct Liver*)malloc(sizeof(struct Liver));
+    printf("Allocated in GetLiver\n");
+    if (liver == NULL) {
+        printf("Memory allocation error while creating liver.\n");
+        return NULL;
+    }
+
     int len = (int)strlen(line);
     liver->surname = (char*)malloc(len + 1);
     line[len - 1] = '\0';
@@ -176,12 +205,13 @@ struct Liver * GetLiver (FILE* file) {
 }
 
 int main(int argc ,char *argv[]) {
-    // if (argc != 2) {
-    //     printf("Wrong input.\nProvide full path to data file.\n");
-    //     return WRONG_ARGUMENTS;
-    // }
+     // if (argc != 2) {
+     //     printf("Wrong input.\nProvide full path to data file.\n");
+     //     return WRONG_ARGUMENTS;
+     // }
     //FILE* file = fopen(argv[1], "r");
-    FILE* file = fopen("D:\\in3_7.txt", "r");
+    //FILE* file = fopen("D:\\in3_7.txt", "r");
+    FILE* file = fopen("/mnt/d/in3_7.txt", "r");
     if (file == NULL) {
         printf("Error opening file.\n");
         return FAILED_OPEN_FILE;
@@ -197,6 +227,7 @@ int main(int argc ,char *argv[]) {
         InsertLiver(&head, liver);
     }
     Display(head);
+    Clear(&head);
 
     return SUCCESS;
 }
