@@ -132,9 +132,13 @@ void Clear(struct Node** head) {
         ptr = *head;
         *head = (*head)->next;
         free(ptr->liver->name);
+        printf("name freed\n");
         free(ptr->liver->surname);
+        printf("surname freed\n");
         free(ptr->liver->otchestvo);
+        printf("otchestvo freed\n");
         free(ptr->liver->birthday);
+        printf("birthday freed\n");
         free(ptr->liver);
         printf("free liver\n");
         free(ptr);
@@ -148,8 +152,6 @@ void Clear(struct Node** head) {
 
 
 struct Liver * GetLiver (FILE* file) {
-
-
     char line[BUFSIZ];
 
     //surname
@@ -166,6 +168,7 @@ struct Liver * GetLiver (FILE* file) {
 
     int len = (int)strlen(line);
     liver->surname = (char*)malloc(len + 1);
+    printf("Surname allocated\n");
     line[len - 1] = '\0';
     strcpy(liver->surname, line);
 
@@ -173,6 +176,7 @@ struct Liver * GetLiver (FILE* file) {
     fgets(line, BUFSIZ, file);
     len = (int)strlen(line);
     liver->name = (char*)malloc(len + 1);
+    printf("Name allocated\n");
     line[len - 1] = '\0';
     strcpy(liver->name, line);
 
@@ -180,6 +184,7 @@ struct Liver * GetLiver (FILE* file) {
     fgets(line, BUFSIZ, file);
     len = (int)strlen(line);
     liver->otchestvo = (char*)malloc(len + 1);
+    printf("Otchestvo allocated\n");
     line[len - 1] = '\0';
     strcpy(liver->otchestvo, line);
 
@@ -187,6 +192,7 @@ struct Liver * GetLiver (FILE* file) {
     fgets(line, BUFSIZ, file);
     len = (int)strlen(line);
     liver->birthday = (char*)malloc(len + 1);
+    printf("Birthday allocated\n");
     line[len - 1] = '\0';
     strcpy(liver->birthday, line);
 
