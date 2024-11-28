@@ -263,12 +263,10 @@ int IsKaprekar(char * num, int base) {
     if ((FromBaseTo10(base, L) + FromBaseTo10(base, R)) == number) {
         free(L);
         free(R);
-        free(sq);
         return IS_KAPREKAR;
     } else {
         free(L);
         free(R);
-        free(sq);
         return IS_NOT_KAPREKAR;
     }
 }
