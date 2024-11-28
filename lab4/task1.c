@@ -82,18 +82,25 @@ struct Macro ** CreateTable(int size) {
 struct Macro *CreateMacro(char *directive, char *value, int len) {
     struct Macro* curMacro = malloc(sizeof(struct Macro));
     if (curMacro == NULL) {
+        free(directive);
+        free(value);
         return NULL;
     }
     curMacro->directive = (char *)malloc(len);
     if (curMacro->directive == NULL) {
+        free(directive);
+        free(value);
         free(curMacro);
         return NULL;
     }
     strcpy(curMacro->directive, directive);
     free(directive);
+
     curMacro->value = (char *)malloc(len);
     if (curMacro->value == NULL) {
+        free(curMacro->directive);
         free(curMacro);
+        free(value);
         return NULL;
     }
     strcpy(curMacro->value, value);
@@ -167,10 +174,12 @@ void Clear(struct Macro ***HashTable, int TableSize) {
                 free(temp->value);
                 free(temp);
             }
+            free(current);
             (*HashTable)[i] = NULL;
         }
     }
     free(*HashTable);
+    *HashTable = NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -185,7 +194,7 @@ int main(int argc, char *argv[]) {
         return ERROR_OPEN_INPUT;
     }
 
-    FILE *temp = fopen("D:\\temp.txt", "w");
+    FILE *temp = fopen("./temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return ERROR_OPEN_TEMP;
@@ -195,6 +204,8 @@ int main(int argc, char *argv[]) {
     struct Macro **HashTable = CreateTable(TableSize);
     if (HashTable == NULL) {
         printf("Error creating hash table\n");
+        fclose(file);
+        fclose(temp);
         return ERROR_CREATING_TABLE;
     }
 
@@ -237,7 +248,7 @@ int main(int argc, char *argv[]) {
                     printf("Error creating macro\n");
                     return ERROR_CREATING_MACRO;
                 }
-
+                //free(directive);
                 InsertMacro(&HashTable, hash, curMacro);
 
                 if (ResizeNeed(&HashTable, TableSize)) {
@@ -245,6 +256,8 @@ int main(int argc, char *argv[]) {
                     struct Macro **p = CreateTable(TableSize);
                     if (p == NULL) {
                         Clear(&HashTable, TableSize);
+                        fclose(file);
+                        fclose(temp);
                         printf("Error reallocating table.\n");
                         return ERROR_REALLOCATING_TABLE;
                     }
@@ -318,6 +331,11 @@ int main(int argc, char *argv[]) {
     Clear(&HashTable, TableSize);
     fclose(file);
     fclose(temp);
+
+    remove(argv[1]);
+    if (rename("./temp.txt", argv[1]) != 0) {
+        printf("Error moving file\n");
+    }
 
     printf("\nCORRECT FINISH\n");
     return 0;
