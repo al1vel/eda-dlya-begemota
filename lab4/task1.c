@@ -134,6 +134,7 @@ void CopyTable(struct Macro *** HashTable, struct Macro *** p, int TableSize) {
             }
         }
     }
+    free(*HashTable);
 }
 
 void PrintTable(struct Macro *** HashTable, int TableSize) {
