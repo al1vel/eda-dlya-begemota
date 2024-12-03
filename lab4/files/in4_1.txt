@@ -1,17 +1,22 @@
+                     #define            MAXLENG22TH                           10
+#define     GREETING                "Hello"
+#define TINGGREE "HI!"
 
+#define PI 3.14
+#define A zzz
+#define zzz 78
 
-#define hui 55
-#define blya 101
-#define blyayu HUINYA
-#define pohui PIDOR
+int main()
+{
+    char message[MAXLENzzzG22TH] = GREETING;
+    double radius = 2.5;
+    double area = PI * radius * radius;
 
-#define ahahc AHAH
-#define pohua8 PIDOR
+    char message1[MAXLENG22TH] = TINGGREE;
+    printf("%s\n", message);
+    printf("Circle area: %f\n", area);
 
-#define poW PIDORAS
+    int a = A + A+A+A+ C + D;
 
-wgnigninain hui awoifnawngi blya iegf
-uwnfun qwiofniqw ahah einghiehahah agin
-ioehnhoweeniwgh pohui wnegheuiowh pohui nwegn
-ioqwgnig ahah hui
-pohua8 gg ahahc blyayu poW
+    return 0;
+}

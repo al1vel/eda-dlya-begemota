@@ -183,6 +183,33 @@ void Clear(struct Macro ***HashTable, int TableSize) {
     *HashTable = NULL;
 }
 
+struct Macro * GetMacro(char * line) {
+    struct Macro *macro = (struct Macro *)malloc(sizeof(struct Macro));
+    char * directive = malloc(BUFSIZ * sizeof(char));
+    char * value = malloc(BUFSIZ * sizeof(char));
+
+    while (*line != '\0') {
+        while (*line == ' ' || *line == '\t') {
+            line++;
+        }
+        int ind = 0;
+        while (*line != ' ') {
+            directive[ind] = *line;
+            line++;
+            ind++;
+        }
+        while (*line == ' ' || *line == '\t') {
+            line++;
+        }
+        ind = 0;
+        while (*line != ' ' || *line != '\t' || *line != '\0') {
+            value[ind] = *line;
+            line++;
+            ind++;
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("File must be inputted.\n");
@@ -195,7 +222,7 @@ int main(int argc, char *argv[]) {
         return ERROR_OPEN_INPUT;
     }
 
-    FILE *temp = fopen("./temp.txt", "w");
+    FILE *temp = fopen("C:\\begemotik\\temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return ERROR_OPEN_TEMP;
@@ -333,10 +360,10 @@ int main(int argc, char *argv[]) {
     fclose(file);
     fclose(temp);
 
-    remove(argv[1]);
-    if (rename("./temp.txt", argv[1]) != 0) {
-        printf("Error moving file\n");
-    }
+    // remove(argv[1]);
+    // if (rename("./temp.txt", argv[1]) != 0) {
+    //     printf("Error moving file\n");
+    // }
 
     printf("\nCORRECT FINISH\n");
     return 0;
