@@ -47,7 +47,7 @@ int mult(int a, int b) {
 class binary_int {
     int num;
 public:
-    binary_int() { num = 0; }
+    binary_int() : num(0) {}
     explicit binary_int(const int val) : num(val) {}
     binary_int(const binary_int& old) { num = old.num; }
     ~binary_int () = default;
@@ -62,7 +62,7 @@ public:
     }
     binary_int operator++ (int) {
         binary_int tmp = *this;
-        num = increment(num);
+        ++*this;
         return tmp;
     }
     binary_int& operator-- () {

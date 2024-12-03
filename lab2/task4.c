@@ -309,7 +309,7 @@ int main() {
 
     printf("%f\n", PolynomeValue(0.5, 6, 19, 5, 0, 4, -10, 0, -100));
 
-    ret = FindKaprekar(16, 3, "6", "f", "88");
+    ret = FindKaprekar(10, 1, "499500", "f", "88");
     if (ret != SUCCESS) {
         ValidateCode(ret);
     }
