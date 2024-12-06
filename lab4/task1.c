@@ -185,8 +185,20 @@ void Clear(struct Macro ***HashTable, int TableSize) {
 
 struct Macro * GetMacro(char * line) {
     struct Macro *macro = (struct Macro *)malloc(sizeof(struct Macro));
-    char * directive = malloc(BUFSIZ * sizeof(char));
-    char * value = malloc(BUFSIZ * sizeof(char));
+    if (macro == NULL) {
+        return NULL;
+    }
+    macro->directive = malloc(BUFSIZ * sizeof(char));
+    if (macro->directive == NULL) {
+        free(macro);
+        return NULL;
+    }
+    macro->value = malloc(BUFSIZ * sizeof(char));
+    if (macro->value == NULL) {
+        free(macro->directive);
+        free(macro);
+        return NULL;
+    }
 
     while (*line != '\0') {
         while (*line == ' ' || *line == '\t') {
@@ -194,20 +206,35 @@ struct Macro * GetMacro(char * line) {
         }
         int ind = 0;
         while (*line != ' ') {
-            directive[ind] = *line;
+            macro->directive[ind] = *line;
             line++;
             ind++;
         }
+        macro->directive[ind] = '\0';
         while (*line == ' ' || *line == '\t') {
             line++;
         }
         ind = 0;
         while (*line != ' ' || *line != '\t' || *line != '\0') {
-            value[ind] = *line;
+            macro->value[ind] = *line;
             line++;
             ind++;
         }
+        macro->value[ind] = '\0';
     }
+    return macro;
+}
+
+int HasDefine(char * line) {
+    while (*line != '\0' || *line != '\n') {
+        if (*line == '#') {
+            if (strncmp(line, "define", 6) == 0) {
+                return 1;
+            }
+        }
+        line++;
+    }
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -222,7 +249,7 @@ int main(int argc, char *argv[]) {
         return ERROR_OPEN_INPUT;
     }
 
-    FILE *temp = fopen("C:\\begemotik\\temp.txt", "w");
+    FILE *temp = fopen("D:\\temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return ERROR_OPEN_TEMP;
@@ -243,58 +270,31 @@ int main(int argc, char *argv[]) {
         if (fgets(line, sizeof(line), file) == NULL) {
             break;
         }
-        int len = (int)strlen(line);
-        if (len > 11) {
-            char word[8];
-            for (int i = 0; i < 7; ++i) {
-                word[i] = line[i];
+
+        if (HasDefine(line)) {
+            struct Macro *macro = GetMacro(line);
+            if (macro == NULL) {
+                printf("Error getting macro\n");
+                fclose(file);
+                fclose(temp);
             }
-            word[7] = '\0';
-            if (strcmp(word, "#define") == 0) {
-                fprintf(temp, "%s", line);
-                char *directive = (char *)malloc(len);
-                char *value = (char *)malloc(len);
-                int i = 8, ind = 0;
-                while (line[i] != ' ') {
-                    directive[ind] = line[i];
-                    i++;
-                    ind++;
-                }
-                directive[ind] = '\0';
-                ind = 0;
-                i++;
-                while (line[i] != '\n') {
-                    value[ind] = line[i];
-                    i++;
-                    ind++;
-                }
-                value[ind] = '\0';
 
-                int hash = GetHash(directive, TableSize) % TableSize;
-                struct Macro *curMacro = CreateMacro(directive, value, len);
-                if (curMacro == NULL) {
-                    printf("Error creating macro\n");
-                    return ERROR_CREATING_MACRO;
-                }
-                //free(directive);
-                InsertMacro(&HashTable, hash, curMacro);
+            int hash = GetHash(macro->directive, TableSize) % TableSize;
+            InsertMacro(&HashTable, hash, macro);
 
-                if (ResizeNeed(&HashTable, TableSize)) {
-                    TableSize += 100;
-                    struct Macro **p = CreateTable(TableSize);
-                    if (p == NULL) {
-                        Clear(&HashTable, TableSize);
-                        fclose(file);
-                        fclose(temp);
-                        printf("Error reallocating table.\n");
-                        return ERROR_REALLOCATING_TABLE;
-                    }
-                    CopyTable(&HashTable, &p, TableSize);
-                    HashTable = p;
-                    printf("REALLOCATED\n");
+            if (ResizeNeed(&HashTable, TableSize)) {
+                TableSize += 100;
+                struct Macro **p = CreateTable(TableSize);
+                if (p == NULL) {
+                    Clear(&HashTable, TableSize);
+                    fclose(file);
+                    fclose(temp);
+                    printf("Error reallocating table.\n");
+                    return ERROR_REALLOCATING_TABLE;
                 }
-            } else {
-                break;
+                CopyTable(&HashTable, &p, TableSize);
+                HashTable = p;
+                printf("REALLOCATED\n");
             }
         } else if (line[0] == '\n') {
             fprintf(temp, "%s", line);
