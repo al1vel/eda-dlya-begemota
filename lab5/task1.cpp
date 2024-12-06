@@ -122,10 +122,7 @@ public:
         return ans;
     }
 
-    binary_int& operator= (const binary_int& other) {
-        num = other.num;
-        return *this;
-    }
+    binary_int& operator= (const binary_int& other) = default;
     friend std::ostream& operator << (std::ostream &out, const binary_int& a);
     friend std::pair<binary_int, binary_int> split(const binary_int& obj);
 };
