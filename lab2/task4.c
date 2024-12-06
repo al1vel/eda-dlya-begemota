@@ -31,6 +31,7 @@ void ValidateCode(int code) {
         case INCORRECT_NUMBER_SYSTEM: printf("INCORRECT_NUMBER_SYSTEM\n"); break;
         case NUM_TOO_LARGE: printf("NUM_TOO_LARGE\n"); break;
         case EMPTY_LINE: printf("EMPTY_LINE\n"); break;
+        case NOT_A_NUM: printf("NOT_A_NUM or INCORRECT_NUMBER_SYSTEM\n"); break;
         default: printf("UNKNOWN ERROR\n"); break;
     }
 }
@@ -121,8 +122,8 @@ double PolynomeValue(double x, int power, ...) {
     return res;
 }
 
-int FromBaseTo10 (const int base, char *str) {
-    int res = 0, negFlag = 0;
+long long FromBaseTo10 (const int base, char *str) {
+    long long res = 0, negFlag = 0;
     char *p = str;
 
     if (*p == '-') {
@@ -144,22 +145,33 @@ int FromBaseTo10 (const int base, char *str) {
     return res;
 }
 
-char * From10toBase(int num, int base) {
+char * From10toBase(long long num, int base) {
     char buf[BUFSIZ], *p = buf + BUFSIZ - 1;
-    int r;
+    long long r;
+    int len = 0;
     *p-- = '\0';
-    //*p-- = 0;
-
-    if (num < 0) {
-        num = -num;
-        *p = '-';
-    }
 
     while (num) {
-        *p-- = ((r = num % base) > 9) ? r - 10 + 'a' : r + '0';
+        r = num % base;
+        if (r > 9) {
+            *p = r - 10 + 'a';
+        } else {
+            *p = r + '0';
+        }
+        p--;
         num /= base;
+        len++;
     }
-    return p + 1;
+    char * res = (char*)malloc(len + 1);
+    if (res == NULL) {
+        printf("malloc failed\n");
+        return NULL;
+    }
+    for (int i = 0; i < len; i++) {
+        res[i] = *(p+1+i);
+    }
+    res[len] = '\0';
+    return res;
 }
 
 int Validate(const char* argv, int base) {
@@ -193,8 +205,8 @@ int Validate(const char* argv, int base) {
     return VALID;
 }
 
-int strLength(char *str) {
-    char * p = str;
+int strLength(const char *str) {
+    const char * p = str;
     int res = 0;
     while (*p != '\0') {
         res++;
@@ -225,50 +237,44 @@ char * IntToString(int number) {
     return rev;
 }
 
-int IsKaprekar(char * num, int base) {
-    int number = FromBaseTo10(base, num);
-    int square = number * number;
+long long FromBaseTo10withBorders (const int base, const char *str, int l, int r) {
+    long long res = 0;
+    int len = r - l + 1;
+    const char *p = str;
 
-    int numLen = strLength(num);
+    p += l;
+
+    while (*p && len > 0) {
+        if (isalpha(*p)) {
+            res = res * base + *p++ - 'a' + 10;
+        }
+        else {
+            res = res * base + *p++ - '0';
+        }
+        len--;
+    }
+    return res;
+}
+
+int IsKaprekar(char * num, int base) {
+    long long number = FromBaseTo10(base, num);
+    long long square = number * number;
+
     char * sq = From10toBase(square, base);
     //printf("Sq: %s\n", sq);
 
     int sqLen = strLength(sq);
-    int lSize = sqLen - numLen;
-    if (lSize == 0) {
-        lSize = 1;
-    }
-    char * L = (char*)malloc(lSize + 1);
-    char * R = (char*)malloc(numLen + 1);
 
-    if (L == NULL || R == NULL) {
-        return MALLOC_FAILED;
-    }
-    L[lSize] = '\0';
-    R[numLen] = '\0';
-
-    if (sqLen == numLen) {
-        L[0] = '0';
-    } else {
-        for (int i = 0; i < lSize; ++i) {
-            L[i] = sq[i];
+    for (int split = 0; split < sqLen; split++) {
+        long long l = FromBaseTo10withBorders(base, sq, 0, split);
+        long long r = FromBaseTo10withBorders(base, sq, split + 1, sqLen - 1);
+        if (l + r == number) {
+            free(sq);
+            return IS_KAPREKAR;
         }
     }
-
-    for (int i = 0; i < numLen; ++i) {
-        R[i] = sq[sqLen - numLen + i];
-    }
-    //printf("L: <%s> | R: <%s>\n", L, R);
-
-    if ((FromBaseTo10(base, L) + FromBaseTo10(base, R)) == number) {
-        free(L);
-        free(R);
-        return IS_KAPREKAR;
-    } else {
-        free(L);
-        free(R);
-        return IS_NOT_KAPREKAR;
-    }
+    free(sq);
+    return IS_NOT_KAPREKAR;
 }
 
 int FindKaprekar(int base, int count, ...) {
@@ -309,7 +315,7 @@ int main() {
 
     printf("%f\n", PolynomeValue(0.5, 6, 19, 5, 0, 4, -10, 0, -100));
 
-    ret = FindKaprekar(10, 1, "499500", "f", "88");
+    ret = FindKaprekar(16, 4, "ff", "1", "8d874", "9d036");
     if (ret != SUCCESS) {
         ValidateCode(ret);
     }
