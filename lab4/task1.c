@@ -201,6 +201,12 @@ struct Macro * GetMacro(char * line) {
     }
 
     while (*line != '\0') {
+        while (*line != '#') {
+            line++;
+        }
+        for (int i = 0; i < 7; ++i) {
+            line++;
+        }
         while (*line == ' ' || *line == '\t') {
             line++;
         }
@@ -215,20 +221,21 @@ struct Macro * GetMacro(char * line) {
             line++;
         }
         ind = 0;
-        while (*line != ' ' || *line != '\t' || *line != '\0') {
+        while (*line != ' ' && *line != '\t' && *line != '\0' && *line != '\n') {
             macro->value[ind] = *line;
             line++;
             ind++;
         }
         macro->value[ind] = '\0';
     }
+    printf("Got macro! Dir: %s; Val: %s;\n", macro->directive, macro->value);
     return macro;
 }
 
 int HasDefine(char * line) {
-    while (*line != '\0' || *line != '\n') {
+    while (*line != '\0' && *line != '\n') {
         if (*line == '#') {
-            if (strncmp(line, "define", 6) == 0) {
+            if (strncmp(line, "#define", 7) == 0) {
                 return 1;
             }
         }
@@ -238,12 +245,13 @@ int HasDefine(char * line) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("File must be inputted.\n");
-        return INVALID_ARGS;
-    }
+    // if (argc != 2) {
+    //     printf("File must be inputted.\n");
+    //     return INVALID_ARGS;
+    // }
 
-    FILE *file = fopen(argv[1], "r");
+    //FILE *file = fopen(argv[1], "r");
+    FILE *file = fopen("D:\\in4_1.txt", "r");
     if (file == NULL) {
         printf("Error opening file <%s>.\n", argv[1]);
         return ERROR_OPEN_INPUT;
@@ -277,6 +285,7 @@ int main(int argc, char *argv[]) {
                 printf("Error getting macro\n");
                 fclose(file);
                 fclose(temp);
+                return ERROR_CREATING_MACRO;
             }
 
             int hash = GetHash(macro->directive, TableSize) % TableSize;
