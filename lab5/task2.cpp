@@ -46,18 +46,17 @@ public:
             return ERROR_SAME_FILES;
         }
 
-        std::ifstream in(inputFile, std::ios::binary);
-        in.open(inputFile, std::ios::binary);
-        if (!in.is_open()) {
+        std::ifstream input(inputFile, std::ios::binary);
+        if (!input.is_open()) {
             std::cout << inputFile << '\n';
-            std::cerr << "File openning error: " << inputFile << ", code: " << errno << '\n';
+            std::cerr << "File opening error: " << inputFile << '\n';
             return FILE_OPENING_ERROR;
         }
 
         std::ofstream out(outputFile, std::ios::binary);
-        out.open(outputFile, std::ios::binary);
         if (!out) {
-            // std::cout << outputFile << '\n';
+            std::cout << outputFile << '\n';
+            std::cerr << "File opening error: " << inputFile << '\n';
             return FILE_OPENING_ERROR;
         }
 
@@ -78,18 +77,15 @@ public:
 
         int i = 0, k = 0;
         char byte;
-        while (in.get(byte)) {
+        while (input.get(byte)) {
             i = (i + 1) % 256;
             j = (j + std::to_integer<int>(S[i])) % 256;
             swap(S[i], S[j]);
             k = std::to_integer<int>(S[(std::to_integer<int>(S[i]) + std::to_integer<int>(S[j])) % 256]);
-
             byte ^= static_cast<char>(k);
-
             out.put(byte);
         }
-
-        in.close();
+        input.close();
         out.close();
         return SUCCESS;
     }
