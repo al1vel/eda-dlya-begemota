@@ -1,4 +1,5 @@
 char * a;
 int ** b;
 float d[10];
-int (*func)();
+int *** c;
+int * c[5];
