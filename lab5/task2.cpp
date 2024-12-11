@@ -11,8 +11,8 @@ enum ret_type_t {
     ERROR_EMPTY_KEY
 };
 
-void HandlingError(int code) {
-    switch (code) {
+void ValidateCode(int ret_code) {
+    switch (ret_code) {
         case FILE_OPENING_ERROR:
             printf("File opening error.\n");
             break;
@@ -95,16 +95,16 @@ int main() {
     std::vector<std::byte> key = {std::byte(0x51), std::byte(0x23), std::byte(0x45), std::byte(0x6A), std::byte(0x89), std::byte(0xAB), std::byte(0x5D), std::byte(0xEF)};
     encoder encoder(key);
 
-    int code = encoder.encode("in.txt", "encoded.txt", true);
-    if (code) {
-        HandlingError(code);
-        return code;
+    int ret_code = encoder.encode("in.txt", "encoded.txt", true);
+    if (ret_code) {
+        ValidateCode(ret_code);
+        return ret_code;
     }
 
-    code = encoder.encode("encoded.txt", "decoded.txt", true);
-    if (code) {
-        HandlingError(code);
-        return code;
+    ret_code = encoder.encode("encoded.txt", "decoded.txt", true);
+    if (ret_code) {
+        ValidateCode(ret_code);
+        return ret_code;
     }
     std::cout << "SUCCESS";
 }
