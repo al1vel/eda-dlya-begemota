@@ -195,17 +195,6 @@ public:
         return findProduct(id);
     }
 
-    std::vector<std::shared_ptr<Product>> getExpiringProducts(unsigned int days) {
-        std::vector<std::shared_ptr<Product>> dead;
-        for (const auto& el : array) {
-            std::shared_ptr<PerishableProduct> product = std::static_pointer_cast<PerishableProduct>(el);
-            if (product && (product->deadline() <= days)) {
-                dead.push_back(product);
-            }
-        }
-        return dead;
-    }
-
     double calculateWarehouseFee() const {
         double total = 0;
         for (const auto& el : array) {
@@ -237,10 +226,10 @@ public:
         }
     }
 
-    friend std::ostream& operator << (std::ostream &out, const Warehouse& sklad) {
+    friend std::ostream& operator << (std::ostream &out, const Warehouse& store) {
         out << "Warehouse:\n";
-        sklad.displayInventory();
-        out << "Warehouse value: " << sklad.calculateWarehouseFee() << '\n';
+        store.displayInventory();
+        out << "Warehouse value: " << store.calculateWarehouseFee() << '\n';
         return out;
     }
 };
@@ -252,14 +241,12 @@ int main() {
     ElectronicProduct b = ElectronicProduct{"rozetka", 3, 0.2, 50, 5, 30,220};
     BuildingMaterial c = BuildingMaterial{"wood", 5, 12, 10, 13, true};
 
-    Warehouse sklad;
-    sklad += std::make_shared<PerishableProduct>(a);
-    sklad += std::make_shared<ElectronicProduct>(b);
-    sklad += std::make_shared<BuildingMaterial>(c);
-    std::cout << sklad;
+    Warehouse store;
+    store += std::make_shared<PerishableProduct>(a);
+    store += std::make_shared<ElectronicProduct>(b);
+    store += std::make_shared<BuildingMaterial>(c);
+    std::cout << store;
     std::cout << "////////////////\n";
-    sklad -= 5;
-    sklad[2]->displayInfo();
-    std::cout << sklad;
-    sklad.getExpiringProducts(15);
+    store -= 5;
+    store[2]->displayInfo();
 }
