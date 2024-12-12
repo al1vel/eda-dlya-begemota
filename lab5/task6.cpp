@@ -6,7 +6,6 @@ class Vector {
     size_t _capacity;
 
 public:
-
     class Iterator {
         double* ptr;
     public:
