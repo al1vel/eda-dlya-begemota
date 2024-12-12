@@ -48,28 +48,28 @@ public:
         return ComplexNum{r, i};
     }
 
-    ComplexNum comp_sum(ComplexNum& a) {
+    ComplexNum summ(ComplexNum& a) {
         double r, i;
         r = real + a.real;
         i = imag + a.imag;
         return ComplexNum{r, i};
     }
 
-    ComplexNum comp_dif (ComplexNum& a) const {
+    ComplexNum minus (ComplexNum& a) const {
         double r, i;
         r = real - a.real;
         i = imag - a.imag;
         return ComplexNum{r, i};
     }
 
-    ComplexNum comp_mult (ComplexNum& a) const {
+    ComplexNum mult (ComplexNum& a) const {
         double r, i;
         r = real * a.real - imag * a.imag;
         i = imag * a.real + a.imag * real;
         return ComplexNum{r, i};
     }
 
-    ComplexNum comp_div (ComplexNum& a) const {
+    ComplexNum division (ComplexNum& a) const {
         double r, i, divider;
         divider = a.real * a.real + a.imag * a.imag;
         r = (real * a.real + imag * a.imag) / divider;
@@ -106,8 +106,8 @@ int main() {
     ComplexNum a(1.2, 8.4);
     ComplexNum b(5.131, 123.5);
 
-    std::cout << a.comp_div(b) << '\n';
-    std::cout << a.comp_dif(b) << '\n';
-    std::cout << a.comp_sum(b) << '\n';
-    std::cout << a.comp_mult(b) << '\n';
+    std::cout << a.division(b) << '\n';
+    std::cout << a.minus(b) << '\n';
+    std::cout << a.summ(b) << '\n';
+    std::cout << a.mult(b) << '\n';
 }
