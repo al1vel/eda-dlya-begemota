@@ -245,32 +245,77 @@ int HasDefine(char * line) {
     return 0;
 }
 
-// struct Lexeme {
-//     char *lex;
-// };
-//
-// struct Lexeme * GetLexemes(char * line) {
-//
-// }
-//
-// void ProcessLine (char * line) {
-//
-// }
+char * ProcessLine (char * line, struct Macro *** HashTable, int TableSize) {
+    char * ptr = line;
+    char buf[BUFSIZ];
+    int i = 0, fileInd = 0;
+
+    char * inFile = (char *)malloc(BUFSIZ * sizeof(char));
+
+    while (*ptr != '\0' && *ptr != '\n') {
+        if (isalnum(*ptr)) {
+            buf[i] = *ptr;
+            i++;
+        } else {
+            buf[i] = '\0';
+            i = 0;
+            //printf("%s\n", buf);
+            int hash = GetHash(buf, TableSize);
+            if ((*HashTable)[hash] != NULL) {
+                struct Macro *p = (*HashTable)[hash];
+                int found = 0;
+                while (p != NULL) {
+                    if (strcmp(p->directive, buf) == 0) {
+                        found = 1;
+                        char *val = p->value;
+                        while (*val != '\0') {
+                            inFile[fileInd] = *val;
+                            fileInd++;
+                            val++;
+                        }
+                    }
+                    p = p->next;
+                }
+                if (!found) {
+                    int k = 0;
+                    while (buf[k] != '\0') {
+                        inFile[fileInd] = buf[k];
+                        fileInd++;
+                        k++;
+                    }
+                }
+            } else {
+                int k = 0;
+                while (buf[k] != '\0') {
+                    inFile[fileInd] = buf[k];
+                    fileInd++;
+                    k++;
+                }
+            }
+            inFile[fileInd] = *ptr;
+            fileInd++;
+        }
+        ptr++;
+    }
+    inFile[fileInd] = '\0';
+    printf("%s\n", inFile);
+    return inFile;
+}
 
 int main(int argc, char *argv[]) {
-    // if (argc != 2) {
-    //     printf("File must be inputted.\n");
-    //     return INVALID_ARGS;
-    // }
+    if (argc != 2) {
+        printf("File must be inputted.\n");
+        return INVALID_ARGS;
+    }
 
-    //FILE *file = fopen(argv[1], "r");
-    FILE *file = fopen("D:\\in4_1.txt", "r");
+    FILE *file = fopen(argv[1], "r");
+    //FILE *file = fopen("C:\\Users\\begemot\\CLionProjects\\eda-dlya-begemota\\lab4\\files\\in4_1.txt", "r");
     if (file == NULL) {
         printf("Error opening file <%s>.\n", argv[1]);
         return ERROR_OPEN_INPUT;
     }
 
-    FILE *temp = fopen("D:\\temp.txt", "w");
+    FILE *temp = fopen("./temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return ERROR_OPEN_TEMP;
@@ -330,69 +375,9 @@ int main(int argc, char *argv[]) {
     printf("\n----SECOND PART----\n\n");
 
     do {
-        //printf("Line: <%s>\n", line);
-        char buf[BUFSIZ];
-        char inFileBuf[BUFSIZ];
-        int ind = 0, fileInd = 0, flag = 0;
-        for (int i = 0; i < strlen(line) + 1; i++) {
-            if (line[i] == '\n' || line[i] == '\0' || line[i] == ' ' || line[i] == ';') {
-                if (line[i] == ';') {
-                    flag = 1;
-                }
-                buf[ind] = '\0';
-                int hash = GetHash(buf, TableSize) % TableSize;
-                if (hash < 0) {
-                    continue;
-                }
-                printf("Hash: %d. Word: <%s>\n", hash, buf);
-                ind = 0;
-
-                if (HashTable[hash] != NULL) {
-                    struct Macro *ptr = HashTable[hash];
-                    while (ptr != NULL) {
-                        if (strcmp(ptr->directive, buf) == 0) {
-                            char *val = ptr->value;
-                            while (*val != '\0') {
-                                inFileBuf[fileInd] = *val;
-                                fileInd++;
-                                val++;
-                            }
-                            if (flag == 0) {
-                                inFileBuf[fileInd] = ' ';
-                            } else if (flag == 1) {
-                                inFileBuf[fileInd] = ';';
-                            }
-                            flag = 0;
-                            fileInd++;
-                        }
-                        ptr = ptr->next;
-                    }
-                } else {
-                    for (int j = 0; j < strlen(buf); j++) {
-                        inFileBuf[fileInd] = buf[j];
-                        fileInd++;
-                    }
-                    switch(flag) {
-                        case 0: inFileBuf[fileInd] = ' '; break;
-                        case 1: inFileBuf[fileInd] = ';'; break;
-                        default: break;
-                    }
-                    fileInd++;
-                }
-            // } else  if (!isalnum(line[i])) {
-            //     continue;
-            } else {
-                buf[ind] = line[i];
-                ind++;
-            }
-            if (line[i] == '\n' || line[i] == '\0') {
-                inFileBuf[fileInd] = '\n';
-                fileInd++;
-                inFileBuf[fileInd] = '\0';
-                fprintf(temp, "%s", inFileBuf);
-                break;
-            }
-        }
+        char * inLine = ProcessLine(line, &HashTable, TableSize);
+        fprintf(temp, "%s\n", inLine);
+        free(inLine);
     } while (fgets(line, sizeof(line), file) != NULL);
 
 
@@ -401,10 +386,10 @@ int main(int argc, char *argv[]) {
     fclose(file);
     fclose(temp);
 
-    // remove(argv[1]);
-    // if (rename("./temp.txt", argv[1]) != 0) {
-    //     printf("Error moving file\n");
-    // }
+    remove(argv[1]);
+    if (rename("./temp.txt", argv[1]) != 0) {
+        printf("Error moving file\n");
+    }
 
     printf("\nCORRECT FINISH\n");
     return 0;
