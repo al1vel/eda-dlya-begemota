@@ -302,20 +302,36 @@ char * ProcessLine (char * line, struct Macro *** HashTable, int TableSize) {
     return inFile;
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("File must be inputted.\n");
-        return INVALID_ARGS;
+int HasSuchValue (struct Macro *** HashTable, int TableSize, struct Macro * macro) {
+    for (int i = 0; i < TableSize; i++) {
+        if ((*HashTable)[i] != NULL) {
+            struct Macro *p = (*HashTable)[i];
+            while (p != NULL) {
+                if (strcmp(p->value, macro->directive) == 0) {
+                    return i;
+                }
+                p = p->next;
+            }
+        }
     }
+    return -1;
+}
 
-    FILE *file = fopen(argv[1], "r");
-    //FILE *file = fopen("C:\\Users\\begemot\\CLionProjects\\eda-dlya-begemota\\lab4\\files\\in4_1.txt", "r");
+int main(int argc, char *argv[]) {
+    // if (argc != 2) {
+    //     printf("File must be inputted.\n");
+    //     return INVALID_ARGS;
+    // }
+
+    //FILE *file = fopen(argv[1], "r");
+    FILE *file = fopen("C:\\Users\\begemot\\CLionProjects\\eda-dlya-begemota\\lab4\\files\\in4_1.txt", "r");
     if (file == NULL) {
         printf("Error opening file <%s>.\n", argv[1]);
         return ERROR_OPEN_INPUT;
     }
 
-    FILE *temp = fopen("./temp.txt", "w");
+    //FILE *temp = fopen("./temp.txt", "w");
+    FILE *temp = fopen("D:\\temp.txt", "w");
     if (temp == NULL) {
         printf("Error opening temporary file\n");
         return ERROR_OPEN_TEMP;
@@ -346,24 +362,36 @@ int main(int argc, char *argv[]) {
                 fclose(temp);
                 return ERROR_CREATING_MACRO;
             }
-
-            int hash = GetHash(macro->directive, TableSize) % TableSize;
-            InsertMacro(&HashTable, hash, macro);
-
-            if (ResizeNeed(&HashTable, TableSize)) {
-                TableSize += 100;
-                struct Macro **p = CreateTable(TableSize);
-                if (p == NULL) {
-                    Clear(&HashTable, TableSize);
-                    fclose(file);
-                    fclose(temp);
-                    printf("Error reallocating table.\n");
-                    return ERROR_REALLOCATING_TABLE;
+            int ret = HasSuchValue(&HashTable, TableSize, macro);
+            if (ret != -1) {
+                struct Macro *p = HashTable[ret];
+                while (p != NULL) {
+                    if (strcmp(p->value, macro->directive) == 0) {
+                        strcpy(p->value, macro->value);
+                    }
+                    p = p->next;
                 }
-                CopyTable(&HashTable, &p, TableSize);
-                HashTable = p;
-                printf("REALLOCATED\n");
+            } else {
+                int hash = GetHash(macro->directive, TableSize) % TableSize;
+                InsertMacro(&HashTable, hash, macro);
+
+                if (ResizeNeed(&HashTable, TableSize)) {
+                    TableSize += 100;
+                    struct Macro **p = CreateTable(TableSize);
+                    if (p == NULL) {
+                        Clear(&HashTable, TableSize);
+                        fclose(file);
+                        fclose(temp);
+                        printf("Error reallocating table.\n");
+                        return ERROR_REALLOCATING_TABLE;
+                    }
+                    CopyTable(&HashTable, &p, TableSize);
+                    HashTable = p;
+                    printf("REALLOCATED\n");
+                }
             }
+
+
         } else if (line[0] == '\n') {
             fprintf(temp, "%s", line);
         } else {
@@ -386,10 +414,10 @@ int main(int argc, char *argv[]) {
     fclose(file);
     fclose(temp);
 
-    remove(argv[1]);
-    if (rename("./temp.txt", argv[1]) != 0) {
-        printf("Error moving file\n");
-    }
+    // remove(argv[1]);
+    // if (rename("./temp.txt", argv[1]) != 0) {
+    //     printf("Error moving file\n");
+    // }
 
     printf("\nCORRECT FINISH\n");
     return 0;
