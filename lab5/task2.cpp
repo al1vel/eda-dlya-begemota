@@ -95,13 +95,13 @@ int main() {
     std::vector<std::byte> key = {std::byte(0x51), std::byte(0x23), std::byte(0x45), std::byte(0x6A), std::byte(0x89), std::byte(0xAB), std::byte(0x5D), std::byte(0xEF)};
     encoder encoder(key);
 
-    int ret_code = encoder.encode("in.txt", "encoded.txt", true);
+    int ret_code = encoder.encode("img.png", "encoded.txt", true);
     if (ret_code) {
         ValidateCode(ret_code);
         return ret_code;
     }
 
-    ret_code = encoder.encode("encoded.txt", "decoded.txt", true);
+    ret_code = encoder.encode("encoded.txt", "decoded.png", true);
     if (ret_code) {
         ValidateCode(ret_code);
         return ret_code;

@@ -21,7 +21,7 @@ public:
         return logical_values_array(~value);
     }
 
-    logical_values_array conjunction(logical_values_array& a) const{
+    logical_values_array conjunction(const logical_values_array& a) const{
         return logical_values_array{value & a.value};
     }
 
@@ -81,7 +81,7 @@ int main() {
     logical_values_array b(10);
 
     std::cout << a.inversion() << '\n';
-    std::cout << a.conjunction(b) << '\n';
+    std::cout << a.conjunction(logical_values_array(6)) << '\n';
     std::cout << a.disjunction(b) << '\n';
     std::cout << a.implication(b) << '\n';
     std::cout << a.coimplication(b) << '\n';
