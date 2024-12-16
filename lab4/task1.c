@@ -58,7 +58,7 @@ int ResizeNeed(struct Macro ***HashTable, int TableSize) {
             }
         }
     }
-    printf("Max: %d | Min: %d\n", maxChain, minChain);
+    //printf("Max: %d | Min: %d\n", maxChain, minChain);
     if (maxChain == 0) {
         return 0;
     }
@@ -200,7 +200,7 @@ struct Macro * GetMacro(char * line) {
         return NULL;
     }
 
-    while (*line != '\0') {
+    while (*line != '\0' && *line != '\n') {
         while (*line != '#') {
             line++;
         }
@@ -228,7 +228,8 @@ struct Macro * GetMacro(char * line) {
         }
         macro->value[ind] = '\0';
     }
-    printf("Got macro! Dir: %s; Val: %s;\n", macro->directive, macro->value);
+    macro->next = NULL;
+    printf("\nGot macro! Dir: %s; Val: %s;\n", macro->directive, macro->value);
     return macro;
 }
 
@@ -243,6 +244,18 @@ int HasDefine(char * line) {
     }
     return 0;
 }
+
+// struct Lexeme {
+//     char *lex;
+// };
+//
+// struct Lexeme * GetLexemes(char * line) {
+//
+// }
+//
+// void ProcessLine (char * line) {
+//
+// }
 
 int main(int argc, char *argv[]) {
     // if (argc != 2) {
@@ -280,6 +293,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (HasDefine(line)) {
+            fprintf(temp, "%s", line);
             struct Macro *macro = GetMacro(line);
             if (macro == NULL) {
                 printf("Error getting macro\n");
@@ -316,13 +330,20 @@ int main(int argc, char *argv[]) {
     printf("\n----SECOND PART----\n\n");
 
     do {
+        //printf("Line: <%s>\n", line);
         char buf[BUFSIZ];
         char inFileBuf[BUFSIZ];
-        int ind = 0, fileInd = 0;
+        int ind = 0, fileInd = 0, flag = 0;
         for (int i = 0; i < strlen(line) + 1; i++) {
-            if (line[i] == '\n' || line[i] == '\0' || line[i] == ' ') {
+            if (line[i] == '\n' || line[i] == '\0' || line[i] == ' ' || line[i] == ';') {
+                if (line[i] == ';') {
+                    flag = 1;
+                }
                 buf[ind] = '\0';
                 int hash = GetHash(buf, TableSize) % TableSize;
+                if (hash < 0) {
+                    continue;
+                }
                 printf("Hash: %d. Word: <%s>\n", hash, buf);
                 ind = 0;
 
@@ -336,7 +357,12 @@ int main(int argc, char *argv[]) {
                                 fileInd++;
                                 val++;
                             }
-                            inFileBuf[fileInd] = ' ';
+                            if (flag == 0) {
+                                inFileBuf[fileInd] = ' ';
+                            } else if (flag == 1) {
+                                inFileBuf[fileInd] = ';';
+                            }
+                            flag = 0;
                             fileInd++;
                         }
                         ptr = ptr->next;
@@ -346,9 +372,15 @@ int main(int argc, char *argv[]) {
                         inFileBuf[fileInd] = buf[j];
                         fileInd++;
                     }
-                    inFileBuf[fileInd] = ' ';
+                    switch(flag) {
+                        case 0: inFileBuf[fileInd] = ' '; break;
+                        case 1: inFileBuf[fileInd] = ';'; break;
+                        default: break;
+                    }
                     fileInd++;
                 }
+            // } else  if (!isalnum(line[i])) {
+            //     continue;
             } else {
                 buf[ind] = line[i];
                 ind++;
