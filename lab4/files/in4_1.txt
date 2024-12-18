@@ -4,21 +4,24 @@
 
 #define PI 3.14
 #define A zzz
-#define BBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 7
-#define CCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 8
 #define zzz 78
+
+#define BBBAAAAAAAAAAAAAAA 7
+#define CCCAAAAAAAAAAAAAAA 8
 
 int main()
 {
-    char message[MAXLENzzzG22TH] = "Hello";
+    char message[MAXLENzzzG22TH] = GREETING;
     double radius = 2.5;
-    double area = 3.14 * radius * radius;
+    double area = PI * radius * radius;
 
-    char message1[10] = "HI!";
+    char message1[MAXLENG22TH] = TINGGREE;
     printf("%s\n", message);
     printf("Circle area: %f\n", area);
 
-    int a = 78 + 78+78+78+ C + D;
-BBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA + CCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    int a = A + A+A+A+ C + D;
+
+    BBBAAAAAAAAAAAAAAA + CCCAAAAAAAAAAAAAAA
+
     return 0;
 }
