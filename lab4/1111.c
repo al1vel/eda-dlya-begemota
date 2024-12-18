@@ -203,7 +203,7 @@ void CopyTable(struct HashTable *old, struct HashTable * new) {
             }
         }
     }
-    //free(*HashTable);
+    //free(old->HashTable);
 }
 
 void Clear(struct HashTable * ht) {
@@ -368,6 +368,7 @@ int main(int argc, char *argv[]) {
                         return ERROR_REALLOCATING_TABLE;
                     }
                     CopyTable(table, newTable);
+                    free(table);
                     table = newTable;
                     printf("REALLOCATED\n");
                 }
