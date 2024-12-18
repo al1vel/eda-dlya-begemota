@@ -71,10 +71,6 @@ int IsConvex(int count, ...) {
 
     int n = count / 2;
 
-    // for (int i = 0; i < n; i++) {
-    //     printf("X: %f | Y: %f\n", array[i].x, array[i].y);
-    // }
-
     double sign = 0;
     for (int i = 0; i < n; i++) {
         double opr = CalculateOpr(array[i], array[(i + 1) % n], array[(i + 2) % n]);
@@ -93,30 +89,14 @@ int IsConvex(int count, ...) {
     return IS_CONVEX;
 }
 
-double fastPow(double number, int power) {
-    if (power < 2) {
-        if (power) {
-            return number;
-        }
-        return 1;
-    }
-    double res = fastPow(number, (power/2));
-    res = res * res;
-    if (power % 2 == 1) {
-        res = res * number;
-    }
-    return res;
-}
-
 double PolynomeValue(double x, int power, ...) {
     va_list arg;
     va_start(arg, power);
 
     double res = 0;
-    for (int i = power; i >= 0; i--) {
+    for (int i = 0; i < power; i++) {
         int koef = va_arg(arg, int);
-        double slag = fastPow(x, i) * koef;
-        res += slag;
+        res = res * x + koef;
     }
     va_end(arg);
     return res;
@@ -215,28 +195,6 @@ int strLength(const char *str) {
     return res;
 }
 
-char * IntToString(int number) {
-    int len = 0, tmp = number;
-    while (tmp) {
-        len++;
-        tmp /= 10;
-    }
-    char * res = (char*)malloc(len + 1);
-    int i = 0, tmpNum = number;
-    while (tmpNum) {
-        res[i] = (tmpNum % 10) + '0';
-        tmpNum /= 10;
-        i++;
-    }
-    char * rev = (char*)malloc(len + 1);
-    for (int j = 0; j < len; j++) {
-        rev[j] = res[len - j - 1];
-    }
-    rev[len] = '\0';
-    free(res);
-    return rev;
-}
-
 long long FromBaseTo10withBorders (const int base, const char *str, int l, int r) {
     long long res = 0;
     int len = r - l + 1;
@@ -313,7 +271,7 @@ int main() {
     int ret = IsConvex(12, 1.0, 0.0, 4.0, 0.0, 5.0, 2.0, 4.0, 4.0, 2.0, 3.0, 0.0, 1.0);
     ValidateCode(ret);
 
-    printf("%f\n", PolynomeValue(0.5, 6, 19, 5, 0, 4, -10, 0, -100));
+    printf("%f\n", PolynomeValue(0.5, 7, 19, 5, 0, 4, -10, 0, -100));
 
     ret = FindKaprekar(16, 4, "ff", "1", "8d874", "9d036");
     if (ret != SUCCESS) {
