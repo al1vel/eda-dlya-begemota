@@ -25,35 +25,35 @@ public:
         return logical_values_array{value & a.value};
     }
 
-    logical_values_array disjunction(logical_values_array& a) const{
+    logical_values_array disjunction(const logical_values_array& a) const{
         return logical_values_array{value | a.value};
     }
 
-    logical_values_array implication(logical_values_array& a) const{
+    logical_values_array implication(const logical_values_array& a) const{
         return logical_values_array{(~value) | a.value};
     }
 
-    logical_values_array coimplication(logical_values_array& a) const{
+    logical_values_array coimplication(const logical_values_array& a) const{
         return logical_values_array{value | (~a.value)};
     }
 
-    logical_values_array XOR(logical_values_array& a) const{
+    logical_values_array XOR(const logical_values_array& a) const{
         return logical_values_array{value ^ a.value};
     }
 
-    logical_values_array equivalence(logical_values_array& a) const{
+    logical_values_array equivalence(const logical_values_array& a) const{
         return logical_values_array{~(value ^ a.value)};
     }
 
-    logical_values_array Piers(logical_values_array& a) const{
+    logical_values_array Piers(const logical_values_array& a) const{
         return logical_values_array{~(value | a.value)};
     }
 
-    logical_values_array Sheffer(logical_values_array& a) const{
+    logical_values_array Sheffer(const logical_values_array& a) const{
         return logical_values_array{~(value & a.value)};
     }
 
-    static logical_values_array equals(logical_values_array& a, logical_values_array& b) {
+    static logical_values_array equals(const logical_values_array& a, const logical_values_array& b) {
         return a.equivalence(b);
     }
 
@@ -89,7 +89,7 @@ int main() {
     std::cout << a.equivalence(b) << '\n';
     std::cout << a.Piers(b) << '\n';
     std::cout << a.Sheffer(b) << '\n';
-    std::cout << logical_values_array::equals(a, b) << '\n';
+    std::cout << logical_values_array::equals(logical_values_array(3), logical_values_array(3)) << '\n';
     std::cout << a.get_val() << '\n';
     std::cout << a.getBit(3) << '\n';
 }
