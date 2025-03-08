@@ -4,13 +4,19 @@
 #include <string.h>
 #include <crypt.h> // To use it, add "-crypt" lib to gcc args
 
-enum {
-    SUCCESS,
-    ENCRYPT_FAILURE,
-    DECRYPT_FAILURE,
-    FILE_FAILURE,
-    FROM_REG_TO_LOGIN
-};
+#define SUCCESS 0
+
+// --- ERRORS --- (negative numbers)
+#define ENCRYPT_FAILURE (-2)
+#define DECRYPT_FAILURE (-3)
+#define FILE_FAILURE (-4)
+
+// --- CONTROLS --- (2 - 10)
+#define NEED_LOGIN 2
+#define NEED_REGISTER 3
+
+// --- STATES --- (11 - ...)
+#define LOGIN_NOT_FOUND (-5)
 
 void validateCode(int code) {
     switch (code) {
@@ -24,7 +30,7 @@ void validateCode(int code) {
 int encrypt_password(const char *password, char **encrypted_password) {
     char *salt = crypt_gensalt_ra(NULL, 0, NULL, 0);
     if (!salt) {
-        return -1;
+        return ENCRYPT_FAILURE;
     }
 
     void *enc_ctx = NULL;
@@ -33,14 +39,14 @@ int encrypt_password(const char *password, char **encrypted_password) {
 
     if (tmp_encrypted_password == NULL) {
         free(salt);
-        return -1;
+        return ENCRYPT_FAILURE;
     }
 
     *encrypted_password = (char *)calloc((strlen(tmp_encrypted_password) + 1), sizeof(char));
     strcpy(*encrypted_password, tmp_encrypted_password);
     free(enc_ctx);
     free(salt);
-    return 0;
+    return SUCCESS;
 }
 
 int compare_passwords(const char *password, const char *hashed_password, int *compare_res) {
@@ -49,23 +55,21 @@ int compare_passwords(const char *password, const char *hashed_password, int *co
 
     char *hashed_entered_password = crypt_ra(password, hashed_password, &enc_ctx, &enc_cxt_sz);
     if (!hashed_entered_password) {
-        return -1;
+        return DECRYPT_FAILURE;
     }
 
     *compare_res = strcmp(hashed_password, hashed_entered_password);
     free(enc_ctx);
-    return 0;
+    return SUCCESS;
 }
 
 int isLoginValid(char *login) {
     while (*login != '\0') {
         if (!isalnum(*login)) {
-            //printf("Invalid input <%c>\n", *login);
             return 0;
         }
         login++;
     }
-    //printf("Valid input\n");
     return 1;
 }
 
@@ -87,28 +91,40 @@ int isPasswordValid(char *password) {
 int isUserAlreadyRegistered(char *newLogin) {
     FILE *file = fopen("userData.txt", "a+");
     if (file == NULL) {
-        return -1;
+        return FILE_FAILURE;
     }
     char login[256];
     int lineNum = 1;
     while (fgets(login, sizeof(login), file)) {
-        //printf("Got line: <%s>", login);
         for (int i = 0; i < 256; ++i) {
             if (login[i] == ' ') {
                 login[i] = '\0';
                 break;
             }
         }
-        //printf("Cut: <%s>", login);
         if (strcmp(login, newLogin) == 0) {
-            //printf("found\n");
             return lineNum;
         }
         lineNum++;
     }
-    //printf("End\n");
     fclose(file);
-    return 0;
+    return LOGIN_NOT_FOUND;
+}
+
+int getCommandFromUser(int commandsCnt) {
+    int com;
+    printf("Enter command: ");
+    while (1) {
+        if (scanf("%d", &com) != 1) {
+            while (getchar() != '\n') {}
+            printf("Invalid command, please try again: ");
+            continue;
+        }
+        if (com > 0 && com <= commandsCnt) {
+            return com;
+        }
+        printf("Invalid command, please try again: ");
+    }
 }
 
 int loginUser() {
@@ -120,11 +136,15 @@ int loginUser() {
         printf("Enter login: ");
         scanf("%s", login);
         int code = isUserAlreadyRegistered(login);
-        if (code == -1) {
+        if (code == FILE_FAILURE) {
             return FILE_FAILURE;
         }
-        if (code == 0) {
-            printf("Login not found. ");
+        if (code == LOGIN_NOT_FOUND) {
+            printf("\nLogin not found.\n1 - Register\n2 - Continue log in\n\n");
+            int command = getCommandFromUser(2);
+            if (command == 1) {
+                return NEED_REGISTER;
+            }
         } else {
             lineNum = code;
             break;
@@ -136,13 +156,12 @@ int loginUser() {
         return FILE_FAILURE;
     }
 
-    char buffer[256];
-    char encrypted_password[256];
+    char buffer[256], encrypted_password[256], password[10];
     int line_count = 1;
 
     while (fgets(buffer, sizeof(buffer), file)) {
         if (line_count == lineNum) {
-            int i = 0;
+            int i = 0, j = 0;
             while (1) {
                 if (buffer[i] == ' ') {
                     break;
@@ -150,7 +169,6 @@ int loginUser() {
                 i++;
             }
             i++;
-            int j = 0;
             while (buffer[i] != '\n') {
                 encrypted_password[j++] = buffer[i++];
             }
@@ -160,9 +178,6 @@ int loginUser() {
         line_count++;
     }
 
-    //printf("Enc pass: <%s>\n", encrypted_password);
-
-    char password[10];
     printf("Enter password: ");
     while (1) {
         scanf("%s", password);
@@ -171,46 +186,35 @@ int loginUser() {
             return DECRYPT_FAILURE;
         }
         if (cmp == 0) {
-            printf("Logged in\n");
+            printf("Login succeeded!\n");
             return SUCCESS;
         }
-        printf("Wrong password. Try again: ");
+        printf("Wrong password.\n1 - Register\n2 - Try again\n\n");
+        int command = getCommandFromUser(2);
+        if (command == 1) {
+            return NEED_REGISTER;
+        }
     }
 }
 
 int registerUser() {
     printf("\nREGISTER\n");
-    char login[256];
+    char login[256], password[10], *hased_pass = NULL;
     while (1) {
         printf("Enter login: ");
         scanf("%s", login);
-        login[strcspn(login, "\n")] = '\0';
         if (!isLoginValid(login)) {
             printf("Login must contain ONLY latin letters and numbers.\nTry again: ");
         } else {
             int code = isUserAlreadyRegistered(login);
-            if (code == -1) {
+            if (code == FILE_FAILURE) {
                 return FILE_FAILURE;
             }
             if (code >= 1) {
-                printf("\nThis login is already registered.\n1 - Log in\n2 - Continue registration\n\nEnter command: ");
-                int command;
-                while(1) {
-                    if (scanf("%d", &command) != 1) {
-                        while (getchar() != '\n') {}
-                        printf("Invalid command, please try again: ");
-                        continue;
-                    }
-                    if (command == 1) {
-                        printf("LOGIN\n");
-                        int ans = loginUser();
-                        return ans;
-                    }
-                    if (command == 2) {
-
-                        break;
-                    }
-                    printf("Invalid command, please try again: ");
+                printf("\nThis login is already registered.\n1 - Log in\n2 - Continue registration\n\n");
+                int command = getCommandFromUser(2);
+                if (command == 1) {
+                    return NEED_LOGIN;
                 }
             } else {
                 break;
@@ -218,7 +222,6 @@ int registerUser() {
         }
     }
 
-    char password[10];
     printf("Enter password (number from 0 to 100000): ");
     while (1) {
         scanf("%s", password);
@@ -228,7 +231,6 @@ int registerUser() {
             break;
         }
     }
-    char *hased_pass = NULL;
     if (encrypt_password(password, &hased_pass)) {
         return ENCRYPT_FAILURE;
     }
@@ -238,45 +240,49 @@ int registerUser() {
         return FILE_FAILURE;
     }
     fprintf(file, "%s %s\n", login, hased_pass);
-    printf("Successfully registered: %s\n", login);
     fclose(file);
+    printf("Register succeeded!\n");
     return SUCCESS;
 }
 
 int welcome() {
-    printf("\nWELCOME\n1 - Log in\n2 - Register\n\nEnter command: ");
-    int command;
-    while(1) {
-        if (scanf("%d", &command) != 1) {
-            while (getchar() != '\n') {}
-            printf("Invalid command, please try again: ");
-            continue;
-        }
-        if (command == 1) {
+    printf("\nWELCOME\n1 - Log in\n2 - Register\n\n");
+    int command = getCommandFromUser(2);
+    switch (command) {
+        case 1: {
             int code = loginUser();
-            if (code != SUCCESS) {
-                validateCode(code);
-                return -1;
+            while (code == NEED_REGISTER || code == NEED_LOGIN) {
+                if (code == NEED_REGISTER) {
+                    code = registerUser();
+                } else if (code == NEED_LOGIN) {
+                    code = loginUser();
+                }
             }
-            break;
+            return code;
         }
-        if (command == 2) {
+        case 2: {
             int code = registerUser();
-            if (code != SUCCESS) {
-                validateCode(code);
-                return -1;
+            while (code == NEED_REGISTER || code == NEED_LOGIN) {
+                if (code == NEED_REGISTER) {
+                    code = registerUser();
+                } else if (code == NEED_LOGIN) {
+                    code = loginUser();
+                }
             }
-            break;
+            return code;
         }
-        printf("Invalid command, please try again: ");
+        default: break;
     }
-    return 0;
+    return SUCCESS;
 }
 
 int main() {
     int code = welcome();
-    if (code != 0) {
+    if (code != SUCCESS) {
+        validateCode(code);
+        printf("\nEmergency shutdown. CODE: %d.\n\n", code);
         return code;
     }
+    printf("\nRegular finishing with code 0.\n\n");
     return 0;
 }
