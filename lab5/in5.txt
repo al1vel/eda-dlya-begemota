@@ -3,4 +3,4 @@ int ** b;
 float d[10];
 int *** c;
 int * c[5];
-int (*func)();
+int (*func)(int(*)(int(*)()));

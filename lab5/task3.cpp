@@ -82,6 +82,7 @@ int main() {
 
     std::cout << a.inversion() << '\n';
     std::cout << a.conjunction(logical_values_array(6)) << '\n';
+    std::cout << a.conjunction(logical_values_array(6)) << '\n';
     std::cout << a.disjunction(b) << '\n';
     std::cout << a.implication(b) << '\n';
     std::cout << a.coimplication(b) << '\n';

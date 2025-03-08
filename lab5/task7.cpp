@@ -132,7 +132,8 @@ public:
     BuildingMaterial() {
         flammability = false;
     };
-    BuildingMaterial(std::string Title, unsigned int ID, float Weight, float Price, unsigned int Time, bool fireDanger) : Product(Title, ID, Weight, Price, Time) {
+    BuildingMaterial(std::string Title, unsigned int ID, float Weight, float Price, unsigned int Time, bool fireDanger)
+    : Product(Title, ID, Weight, Price, Time) {
         flammability = fireDanger;
     };
     BuildingMaterial(BuildingMaterial& old)  : Product(old) {
