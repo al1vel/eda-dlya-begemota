@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <crypt.h> // To use it, add "-crypt" lib to gcc args
 
 #define SUCCESS 0
@@ -17,6 +18,9 @@
 
 // --- STATES --- (11 - ...)
 #define LOGIN_NOT_FOUND (-5)
+#define LOGOUT (-6)
+
+char username[256];
 
 void validateCode(int code) {
     switch (code) {
@@ -186,7 +190,8 @@ int loginUser() {
             return DECRYPT_FAILURE;
         }
         if (cmp == 0) {
-            printf("Login succeeded!\n");
+            printf("Login succeeded!\n\n");
+            strcpy(username, login);
             return SUCCESS;
         }
         printf("Wrong password.\n1 - Register\n2 - Try again\n\n");
@@ -241,7 +246,8 @@ int registerUser() {
     }
     fprintf(file, "%s %s\n", login, hased_pass);
     fclose(file);
-    printf("Register succeeded!\n");
+    strcpy(username, login);
+    printf("Register succeeded!\n\n");
     return SUCCESS;
 }
 
@@ -276,6 +282,46 @@ int welcome() {
     return SUCCESS;
 }
 
+int readCommand() {
+    char com[20];
+    int comNum = 0;
+    printf("%s$ ", username);
+    while (1) {
+        fgets(com, sizeof(com), stdin);
+        com[strcspn(com, "\n")] = '\0';
+        if (strcmp(com, "Time") == 0) {
+            comNum = 1;
+            break;
+        }
+        if (strcmp(com, "Logout") == 0) {
+            comNum = 4;
+            break;
+        }
+        printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
+
+    }
+    return comNum;
+}
+
+void printCurrentTime() {
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char time_str[9];
+    strftime(time_str, sizeof(time_str), "%H:%M:%S", tm_info);
+    printf("Current time: %s\n\n", time_str);
+}
+
+int loop() {
+    while (1) {
+        int command = readCommand();
+        if (command == 1) {
+            printCurrentTime();
+        } else if (command == 4) {
+            return LOGOUT;
+        }
+    }
+}
+
 int main() {
     int code = welcome();
     if (code != SUCCESS) {
@@ -283,6 +329,23 @@ int main() {
         printf("\nEmergency shutdown. CODE: %d.\n\n", code);
         return code;
     }
+
+    while (getchar() != '\n') {}
+    code = loop();
+
+    while (1) {
+        if (code == LOGOUT) {
+            code = welcome();
+            if (code != SUCCESS) {
+                validateCode(code);
+                printf("\nEmergency shutdown. CODE: %d.\n\n", code);
+                return code;
+            }
+            while (getchar() != '\n') {}
+            code = loop();
+        }
+    }
+
     printf("\nRegular finishing with code 0.\n\n");
     return 0;
 }
