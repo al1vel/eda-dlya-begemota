@@ -22,6 +22,85 @@
 
 char username[256];
 
+int contains(char *str, char *sub) {
+    while (*sub != '\0') {
+        if (*str != *sub) {
+            return 0;
+        }
+        str++;
+        sub++;
+    }
+    return 1;
+}
+
+int hasFlag(char *str, char *flag) {
+    printf("str: <%s> | flag: <%s>\n", str, flag);
+    while (*str != '-') {
+        if (*str == '\0') {
+            return 0;
+        }
+        str++;
+    }
+    while (*flag != '\0') {
+        if (*str != *flag) {
+            return 0;
+        }
+        str++;
+        flag++;
+    }
+    return 1;
+}
+
+char *getTime(char *str) {
+    while (*str != ' ') {
+        if (*str == '\0') {
+            return NULL;
+        }
+        str++;
+    }
+    while (*str == ' ') {
+        str++;
+    }
+
+    char *time = (char*)malloc(sizeof(char) * 20);
+
+    int cnt = 0;
+    int i = 0;
+    while (*str != '\0') {
+        time[i] = *str;
+        str++;
+        i++;
+        cnt++;
+    }
+    time[i] = '\0';
+    if (cnt != 19) {
+        free(time);
+        return NULL;
+    }
+
+    i = 0;
+    while (time[i] != '\0') {
+        if ((i == 2 || i == 5) && (time[i] != '.')) {
+            free(time);
+            return NULL;
+        }
+        if (i == 10 && time[i] != ' ') {
+            free(time);
+            return NULL;
+        }
+        if ((i == 13 || i == 16) && (time[i] != ':')) {
+            free(time);
+            return NULL;
+        }
+        if (!isdigit(time[i])) {
+            free(time);
+            return NULL;
+        }
+        i++;
+    }
+    return time;
+}
+
 void validateCode(int code) {
     switch (code) {
         case ENCRYPT_FAILURE: printf("ENCRYPT_FAILURE\n"); break;
@@ -194,10 +273,12 @@ int loginUser() {
             strcpy(username, login);
             return SUCCESS;
         }
-        printf("Wrong password.\n1 - Register\n2 - Try again\n\n");
+        printf("\nWrong password.\n1 - Register\n2 - Try again\n\n");
         int command = getCommandFromUser(2);
         if (command == 1) {
             return NEED_REGISTER;
+        } if (command == 2) {
+            printf("Enter password: ");
         }
     }
 }
@@ -282,8 +363,8 @@ int welcome() {
     return SUCCESS;
 }
 
-int readCommand() {
-    char com[20];
+int readCommand(char* arg) {
+    char com[40];
     int comNum = 0;
     printf("%s$ ", username);
     while (1) {
@@ -292,12 +373,35 @@ int readCommand() {
         if (strcmp(com, "Time") == 0) {
             comNum = 1;
             break;
-        }
-        if (strcmp(com, "Logout") == 0) {
+        } else if (strcmp(com, "Date") == 0) {
+            comNum = 2;
+            break;
+        } else if (contains(com, "Howmuch")) {
+            if (hasFlag(com, "-s")) {
+                char * time = getTime(com);
+                printf("time: <%s>\n", time);
+                comNum = 5;
+                break;
+            }
+            if (hasFlag(com, "-m")) {
+                comNum = 6;
+                break;
+            }
+            if (hasFlag(com, "-h")) {
+                comNum = 7;
+                break;
+            }
+            if (hasFlag(com, "-y")) {
+                comNum = 8;
+                break;
+            }
+            printf("%s$ <Howmuch> must have valid flag: -s, -m, -h, -y.\n%s$ ", username, username);
+        } else if (strcmp(com, "Logout") == 0) {
             comNum = 4;
             break;
+        } else {
+            printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
         }
-        printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
 
     }
     return comNum;
@@ -311,11 +415,28 @@ void printCurrentTime() {
     printf("Current time: %s\n\n", time_str);
 }
 
+void printCurrentDate() {
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char date_str[11];
+    strftime(date_str, sizeof(date_str), "%d-%m-%Y", tm_info);
+    printf("Current date: %s\n\n", date_str);
+}
+
+void printHowMuch(int flag) {
+
+}
+
 int loop() {
     while (1) {
-        int command = readCommand();
+        char time[20];
+        int command = readCommand(time);
         if (command == 1) {
             printCurrentTime();
+        } else if (command == 2) {
+            printCurrentDate();
+        } else if (command == 5) {
+            printf("S\n");
         } else if (command == 4) {
             return LOGOUT;
         }
