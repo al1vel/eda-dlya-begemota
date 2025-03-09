@@ -33,6 +33,14 @@ int contains(char *str, char *sub) {
     return 1;
 }
 
+int getNumber(char *str, int start, int stop) {
+    int result = 0;
+    while (start <= stop) {
+        result = result * 10 + (str[start++] - '0');
+    }
+    return result;
+}
+
 int hasFlag(char *str, char *flag) {
     printf("str: <%s> | flag: <%s>\n", str, flag);
     while (*str != '-') {
@@ -51,9 +59,12 @@ int hasFlag(char *str, char *flag) {
     return 1;
 }
 
-char *getTime(char *str) {
+time_t* getTime(char *str) {
+    printf("getTime started\n");
+    printf("str: <%s>\n", str);
     while (*str != ' ') {
         if (*str == '\0') {
+            printf("Ended to early\n");
             return NULL;
         }
         str++;
@@ -61,44 +72,58 @@ char *getTime(char *str) {
     while (*str == ' ') {
         str++;
     }
-
-    char *time = (char*)malloc(sizeof(char) * 20);
+    printf("doehali\n");
+    char time[20];
 
     int cnt = 0;
     int i = 0;
-    while (*str != '\0') {
+    while (*str != '\0' && cnt < 19) {
         time[i] = *str;
         str++;
         i++;
         cnt++;
     }
     time[i] = '\0';
+    printf("Time: <%s>\n", time);
     if (cnt != 19) {
-        free(time);
+        printf("Less than 19\n");
         return NULL;
     }
 
     i = 0;
     while (time[i] != '\0') {
         if ((i == 2 || i == 5) && (time[i] != '.')) {
-            free(time);
+            printf("Dots issue\n");
             return NULL;
         }
         if (i == 10 && time[i] != ' ') {
-            free(time);
+            printf("Space issue\n");
             return NULL;
         }
         if ((i == 13 || i == 16) && (time[i] != ':')) {
-            free(time);
+            printf("Doubledots issue\n");
             return NULL;
         }
-        if (!isdigit(time[i])) {
-            free(time);
+        if (!isdigit(time[i]) && (i != 2 || i != 5 || i != 10 || i != 13 || i != 16)) {
+            printf("Not a number\n");
             return NULL;
         }
         i++;
     }
-    return time;
+
+    struct tm t;
+    t.tm_year = getNumber(time, 6,9);
+    t.tm_mon = getNumber(time, 3,4);
+    t.tm_mday = getNumber(time, 0,1);
+    t.tm_hour = getNumber(time, 11,12);
+    t.tm_min = getNumber(time, 14,15);
+    t.tm_sec = getNumber(time, 17,18);
+
+    printf("%d.%d.%d %d:%d:%d\n", t.tm_mday, t.tm_mon, t.tm_year, t.tm_hour, t.tm_min, t.tm_sec);
+
+    time_t* ans = (time_t*)malloc(sizeof(time_t));
+    *ans = mktime(&t);
+    return ans;
 }
 
 void validateCode(int code) {
@@ -363,7 +388,7 @@ int welcome() {
     return SUCCESS;
 }
 
-int readCommand(char* arg) {
+int readCommand(time_t* arg) {
     char com[40];
     int comNum = 0;
     printf("%s$ ", username);
@@ -378,8 +403,7 @@ int readCommand(char* arg) {
             break;
         } else if (contains(com, "Howmuch")) {
             if (hasFlag(com, "-s")) {
-                char * time = getTime(com);
-                printf("time: <%s>\n", time);
+                arg = getTime(com);
                 comNum = 5;
                 break;
             }
@@ -402,7 +426,6 @@ int readCommand(char* arg) {
         } else {
             printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
         }
-
     }
     return comNum;
 }
@@ -423,14 +446,15 @@ void printCurrentDate() {
     printf("Current date: %s\n\n", date_str);
 }
 
-void printHowMuch(int flag) {
-
+void printHowMuch(time_t* pastTime, int flag) {
+    time_t now = time(NULL);
+    double hours_passed = difftime(now, *pastTime) / 3600;
 }
 
 int loop() {
     while (1) {
-        char time[20];
-        int command = readCommand(time);
+        time_t time;
+        int command = readCommand(&time);
         if (command == 1) {
             printCurrentTime();
         } else if (command == 2) {
