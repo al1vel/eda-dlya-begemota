@@ -533,7 +533,15 @@ int readCommand(time_t* arg) {
                 printf("It is not allowed to impose sanctions on yourself.\n%s$ ", username);
                 continue;
             }
-
+            printf("Enter confirmation code: ");
+            char buf[10];
+            //scanf("%s", buf);
+            fgets(buf, sizeof(buf), stdin);
+            buf[strcspn(buf, "\n")] = '\0';
+            if (strcmp(buf, "12345") != 0) {
+                printf("Wrong confirmation code.\n%s$ ", username);
+                continue;
+            }
             int code = isUserAlreadyRegistered(login);
             if (code == LOGIN_NOT_FOUND) {
                 printf("Login <%s> doesn't exist.\n%s$ ", login, username);
@@ -607,6 +615,7 @@ int loop() {
         }else if (command == 8) {
             printHowMuch(time, 4);
         } else if (command == 4) {
+            free(time);
             return LOGOUT;
         }
         free(time);
