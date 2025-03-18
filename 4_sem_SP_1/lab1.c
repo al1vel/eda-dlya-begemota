@@ -14,6 +14,7 @@
 #define TIME_FORMAT_FAILURE (-7)
 #define TIME_IS_FUTURE (-8)
 #define TIME_BELOW_1900 (-9)
+#define MALLOC_ERROR (-11)
 
 // --- CONTROLS ---
 #define NEED_LOGIN 2
@@ -129,7 +130,8 @@ int getTime(char *str, time_t* arg) {
         return TIME_BELOW_1900;
     }
 
-    if (tn->tm_year - t.tm_year < 0 || tn->tm_mon - t.tm_mon < 0 || tn->tm_mday - t.tm_mday < 0 || tn->tm_hour - t.tm_hour < 0 || tn->tm_min - t.tm_min < 0 || tn->tm_sec - t.tm_sec < 0) {
+    if (tn->tm_year - t.tm_year < 0 || tn->tm_mon - t.tm_mon < 0 || tn->tm_mday - t.tm_mday < 0 ||
+        tn->tm_hour - t.tm_hour < 0 || tn->tm_min - t.tm_min < 0 || tn->tm_sec - t.tm_sec < 0) {
         return TIME_IS_FUTURE;
     }
 
@@ -617,6 +619,9 @@ void printHowMuch(time_t* pastTime, int flag) {
 int loop() {
     while (1) {
         time_t* time = (time_t*)malloc(sizeof(time_t));
+        if (time == NULL) {
+            return MALLOC_ERROR;
+        }
         int command = readCommand(time);
 
         if (command == 1) {
@@ -653,5 +658,8 @@ int main() {
         }
         while (getchar() != '\n') {}
         code = loop();
+        if (code == MALLOC_ERROR) {
+            return MALLOC_ERROR;
+        }
     }
 }
