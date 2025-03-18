@@ -7,18 +7,22 @@
 
 #define SUCCESS 0
 
-// --- ERRORS --- (negative numbers)
+// --- ERRORS ---
 #define ENCRYPT_FAILURE (-2)
 #define DECRYPT_FAILURE (-3)
 #define FILE_FAILURE (-4)
+#define TIME_FORMAT_FAILURE (-7)
+#define TIME_IS_FUTURE (-8)
+#define TIME_BELOW_1900 (-9)
 
-// --- CONTROLS --- (2 - 10)
+// --- CONTROLS ---
 #define NEED_LOGIN 2
 #define NEED_REGISTER 3
 
-// --- STATES --- (11 - ...)
+// --- STATES ---
 #define LOGIN_NOT_FOUND (-5)
 #define LOGOUT (-6)
+#define SHUTDOWN (-10)
 
 char username[256];
 
@@ -33,7 +37,7 @@ int contains(char *str, char *sub) {
     return 1;
 }
 
-int getNumber(char *str, int start, int stop) {
+int getNumber(const char *str, int start, int stop) {
     int result = 0;
     while (start <= stop) {
         result = result * 10 + (str[start++] - '0');
@@ -59,13 +63,11 @@ int hasFlag(char *str, char *flag) {
     return 1;
 }
 
-void getTime(char *str, time_t* arg) {
-    // printf("getTime started\n");
-    // printf("str: <%s>\n", str);
+int getTime(char *str, time_t* arg) {
     while (*str != ' ') {
         if (*str == '\0') {
-            printf("Ended to early\n");
-            return;
+            //printf("Ended to early\n");
+            return TIME_FORMAT_FAILURE;
         }
         str++;
     }
@@ -73,53 +75,65 @@ void getTime(char *str, time_t* arg) {
         str++;
     }
     //printf("doehali\n");
-    char time[20];
+    char timeStr[20];
 
     int cnt = 0;
     int i = 0;
     while (*str != '\0' && cnt < 19) {
-        time[i] = *str;
+        timeStr[i] = *str;
         str++;
         i++;
         cnt++;
     }
-    time[i] = '\0';
+    timeStr[i] = '\0';
     //printf("Time: <%s>\n", time);
     if (cnt != 19) {
-        printf("Less than 19\n");
-        return;
+        //printf("Less than 19\n");
+        return TIME_FORMAT_FAILURE;
     }
 
     i = 0;
-    while (time[i] != '\0') {
-        if ((i == 2 || i == 5) && (time[i] != '.')) {
-            printf("Dots issue\n");
-            return;
+    while (timeStr[i] != '\0') {
+        if ((i == 2 || i == 5) && (timeStr[i] != '.')) {
+            //printf("Dots issue\n");
+            return TIME_FORMAT_FAILURE;
         }
-        if (i == 10 && time[i] != ' ') {
-            printf("Space issue\n");
-            return;
+        if (i == 10 && timeStr[i] != ' ') {
+            //printf("Space issue\n");
+            return TIME_FORMAT_FAILURE;
         }
-        if ((i == 13 || i == 16) && (time[i] != ':')) {
-            printf("Doubledots issue\n");
-            return;
+        if ((i == 13 || i == 16) && (timeStr[i] != ':')) {
+            //printf("Doubledots issue\n");
+            return TIME_FORMAT_FAILURE;
         }
-        if (!isdigit(time[i]) && (i != 2 && i != 5 && i != 10 && i != 13 && i != 16)) {
-            printf("Not a number\n");
-            return;
+        if (!isdigit(timeStr[i]) && (i != 2 && i != 5 && i != 10 && i != 13 && i != 16)) {
+            //printf("%c Not a number\n", time[i]);
+            return TIME_FORMAT_FAILURE;
         }
         i++;
     }
 
     struct tm t;
-    t.tm_year = getNumber(time, 6,9) - 1900;
-    t.tm_mon = getNumber(time, 3,4) - 1;
-    t.tm_mday = getNumber(time, 0,1);
-    t.tm_hour = getNumber(time, 11,12);
-    t.tm_min = getNumber(time, 14,15);
-    t.tm_sec = getNumber(time, 17,18);
+    t.tm_year = getNumber(timeStr, 6,9) - 1900;
+    t.tm_mon = getNumber(timeStr, 3,4) - 1;
+    t.tm_mday = getNumber(timeStr, 0,1);
+    t.tm_hour = getNumber(timeStr, 11,12);
+    t.tm_min = getNumber(timeStr, 14,15);
+    t.tm_sec = getNumber(timeStr, 17,18);
+
+    time_t now = time(NULL);
+    struct tm *tn = localtime(&now);
+
+    if (t.tm_year < 0) {
+        return TIME_BELOW_1900;
+    }
+
+    if (tn->tm_year - t.tm_year < 0 || tn->tm_mon - t.tm_mon < 0 || tn->tm_mday - t.tm_mday < 0 || tn->tm_hour - t.tm_hour < 0 || tn->tm_min - t.tm_min < 0 || tn->tm_sec - t.tm_sec < 0) {
+        return TIME_IS_FUTURE;
+    }
 
     *arg = mktime(&t);
+    return SUCCESS;
 }
 
 void validateCode(int code) {
@@ -273,7 +287,7 @@ int loginUser() {
                 i++;
             }
             i++;
-            while (buffer[i] != '\n') {
+            while (buffer[i] != ' ') {
                 encrypted_password[j++] = buffer[i++];
             }
             encrypted_password[j] = '\0';
@@ -346,7 +360,7 @@ int registerUser() {
     if (file == NULL) {
         return FILE_FAILURE;
     }
-    fprintf(file, "%s %s\n", login, hased_pass);
+    fprintf(file, "%s %s %s\n", login, hased_pass, "-1");
     fclose(file);
     strcpy(username, login);
     printf("Register succeeded!\n\n");
@@ -354,8 +368,8 @@ int registerUser() {
 }
 
 int welcome() {
-    printf("\nWELCOME\n1 - Log in\n2 - Register\n\n");
-    int command = getCommandFromUser(2);
+    printf("\nWELCOME\n1 - Log in\n2 - Register\n3 - Shut down\n\n");
+    int command = getCommandFromUser(3);
     switch (command) {
         case 1: {
             int code = loginUser();
@@ -379,6 +393,9 @@ int welcome() {
             }
             return code;
         }
+        case 3: {
+            return SHUTDOWN;
+        }
         default: break;
     }
     return SUCCESS;
@@ -391,38 +408,98 @@ int readCommand(time_t* arg) {
     while (1) {
         fgets(com, sizeof(com), stdin);
         com[strcspn(com, "\n")] = '\0';
+
+        //printf("Com: <%s>\n", com);
+
         if (strcmp(com, "Time") == 0) {
             comNum = 1;
             break;
-        } else if (strcmp(com, "Date") == 0) {
+        }
+        if (strcmp(com, "Date") == 0) {
             comNum = 2;
             break;
-        } else if (contains(com, "Howmuch")) {
+        }
+        if (strcmp(com, "Logout") == 0) {
+            comNum = 4;
+            break;
+        }
+        if (contains(com, "Howmuch")) {
+            int code = getTime(com, arg);
+            if (code != SUCCESS) {
+                if (code == TIME_BELOW_1900) {
+                    printf("Invalid time. Year must be 1900 or above.\n%s$ ", username);
+                } else if (code == TIME_IS_FUTURE) {
+                    printf("Invalid time. Provided time must be past.\n%s$ ", username);
+                } else if (code == TIME_FORMAT_FAILURE) {
+                    printf("Invalid time format. Format needed: dd.mm.yyyy hh:mm:ss\n%s$ ", username);
+                }
+                continue;
+            }
+
             if (hasFlag(com, "-s")) {
-                getTime(com, arg);
                 comNum = 5;
                 break;
             }
             if (hasFlag(com, "-m")) {
-                getTime(com, arg);
                 comNum = 6;
                 break;
             }
             if (hasFlag(com, "-h")) {
-                getTime(com, arg);
                 comNum = 7;
                 break;
             }
             if (hasFlag(com, "-y")) {
-                getTime(com, arg);
                 comNum = 8;
                 break;
             }
             printf("%s$ <Howmuch> must have valid flag: -s, -m, -h, -y.\n%s$ ", username, username);
-        } else if (strcmp(com, "Logout") == 0) {
-            comNum = 4;
-            break;
-        } else {
+
+        } else if (contains(com, "Sanctions")) {
+            char login[256];
+            int commandsCnt = 0, i = 0, j = 0, error = 0;
+
+            while (com[i] != ' ') {
+                if (com[i] == '\0') {
+                    printf("Invalid command syntax. Expected: Sanctions username <number>.\n%s$ ", username);
+                    error = 1;
+                    break;
+                }
+                i++;
+            }
+            if (error) {
+                continue;
+            }
+            i++;
+            while (com[i] != ' ') {
+                if (com[i] == '\0') {
+                    printf("Invalid command syntax. Expected: Sanctions username <number>.\n%s$ ", username);
+                    error = 1;
+                    break;
+                }
+                login[j++] = com[i++];
+            }
+            if (error) {
+                continue;
+            }
+            i++;
+            while (com[i] != '\0') {
+                // if (com[i] == '\0') {
+                //     printf("Invalid command syntax. Expected: Sanctions username <number>.\n%s$ ", username);
+                //     error = 1;
+                //     break;
+                // }
+                if (!isdigit(com[i])) {
+                    error = 1;
+                    break;
+                }
+                commandsCnt = commandsCnt * 10 + com[i++] - '0';
+            }
+            if (error) {
+                continue;
+            }
+            printf("<%s> - %d\n\n", login, commandsCnt);
+        }
+        else {
             printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
         }
     }
@@ -446,7 +523,6 @@ void printCurrentDate() {
 }
 
 void printHowMuch(time_t* pastTime, int flag) {
-    //printf("\nStarted\n");
     time_t now = time(NULL);
     if (flag == 1) {
         double passed = difftime(now, *pastTime);
@@ -458,7 +534,7 @@ void printHowMuch(time_t* pastTime, int flag) {
         double passed = difftime(now, *pastTime) / 3600;
         printf("Hours passed: %.2f\n\n", passed);
     } else if (flag == 4) {
-        double passed = difftime(now, *pastTime) / 86400;
+        double passed = difftime(now, *pastTime) / 31536000;
         printf("Years passed: %.2f\n\n", passed);
     }
 }
@@ -467,9 +543,6 @@ int loop() {
     while (1) {
         time_t* time = (time_t*)malloc(sizeof(time_t));
         int command = readCommand(time);
-
-        // struct tm *tm_info = localtime(time);
-        // printf("date: %02d-%02d-%d\n", tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900);
 
         if (command == 1) {
             printCurrentTime();
@@ -491,29 +564,18 @@ int loop() {
 }
 
 int main() {
-    int code = welcome();
-    if (code != SUCCESS) {
-        validateCode(code);
-        printf("\nEmergency shutdown. CODE: %d.\n\n", code);
-        return code;
-    }
-
-    while (getchar() != '\n') {}
-    code = loop();
-
     while (1) {
-        if (code == LOGOUT) {
-            code = welcome();
-            if (code != SUCCESS) {
-                validateCode(code);
-                printf("\nEmergency shutdown. CODE: %d.\n\n", code);
-                return code;
+        int code = welcome();
+        if (code != SUCCESS) {
+            if (code == SHUTDOWN) {
+                printf("Shutting down...\n");
+                return 0;
             }
-            while (getchar() != '\n') {}
-            code = loop();
+            validateCode(code);
+            printf("\nEmergency shutdown. CODE: %d.\n\n", code);
+            return code;
         }
+        while (getchar() != '\n') {}
+        code = loop();
     }
-
-    printf("\nRegular finishing with code 0.\n\n");
-    return 0;
 }
