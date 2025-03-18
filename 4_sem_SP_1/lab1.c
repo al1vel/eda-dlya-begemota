@@ -183,11 +183,19 @@ int compare_passwords(const char *password, const char *hashed_password, int *co
 }
 
 int isLoginValid(char *login) {
+    int cnt = 0;
     while (*login != '\0') {
         if (!isalnum(*login)) {
             return 0;
         }
+        if (cnt > 6) {
+            return -1;
+        }
         login++;
+        cnt++;
+    }
+    if (cnt > 6) {
+        return -1;
     }
     return 1;
 }
@@ -296,7 +304,7 @@ int loginUser() {
             printf("Login succeeded!\n\n");
             strcpy(username, login);
             availableCommandsCount = number;
-            printf("com num: %d\n", availableCommandsCount);
+            //printf("com num: %d\n", availableCommandsCount);
             return SUCCESS;
         }
         printf("\nWrong password.\n1 - Register\n2 - Try again\n\n");
@@ -312,17 +320,25 @@ int loginUser() {
 int registerUser() {
     printf("\nREGISTER\n");
     char login[256], password[10], *hased_pass = NULL;
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {};
     while (1) {
         printf("Enter login: ");
-        scanf("%s", login);
-        if (!isLoginValid(login)) {
-            printf("Login must contain ONLY latin letters and numbers.\nTry again: ");
+        fgets(login, sizeof(login), stdin);
+        login[strcspn(login, "\n")] = '\0';
+        int code = isLoginValid(login);
+        if (code != 1) {
+            if (code == 0) {
+                printf("Login must contain ONLY latin letters and numbers.\n");
+            } else if (code == -1) {
+                printf("Login must be less than 6 symbols.\n");
+            }
         } else {
-            int code = isUserAlreadyRegistered(login);
-            if (code == FILE_FAILURE) {
+            int ans = isUserAlreadyRegistered(login);
+            if (ans == FILE_FAILURE) {
                 return FILE_FAILURE;
             }
-            if (code >= 1) {
+            if (ans >= 1) {
                 printf("\nThis login is already registered.\n1 - Log in\n2 - Continue registration\n\n");
                 int command = getCommandFromUser(2);
                 if (command == 1) {
@@ -356,6 +372,7 @@ int registerUser() {
     strcpy(username, login);
     printf("Register succeeded!\n\n");
     availableCommandsCount = -1;
+    free(hased_pass);
     return SUCCESS;
 }
 
