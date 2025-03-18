@@ -25,6 +25,7 @@
 #define SHUTDOWN (-10)
 
 char username[256];
+int availableCommandsCount;
 
 int contains(char *str, char *sub) {
     while (*sub != '\0') {
@@ -274,23 +275,11 @@ int loginUser() {
         return FILE_FAILURE;
     }
 
-    char buffer[256], encrypted_password[256], password[10];
-    int line_count = 1;
+    char name[256], encrypted_password[256], password[10];
+    int line_count = 1, number;
 
-    while (fgets(buffer, sizeof(buffer), file)) {
+    while (fscanf(file, "%s %s %d", name, encrypted_password, &number) == 3) {
         if (line_count == lineNum) {
-            int i = 0, j = 0;
-            while (1) {
-                if (buffer[i] == ' ') {
-                    break;
-                }
-                i++;
-            }
-            i++;
-            while (buffer[i] != ' ') {
-                encrypted_password[j++] = buffer[i++];
-            }
-            encrypted_password[j] = '\0';
             break;
         }
         line_count++;
@@ -306,6 +295,8 @@ int loginUser() {
         if (cmp == 0) {
             printf("Login succeeded!\n\n");
             strcpy(username, login);
+            availableCommandsCount = number;
+            printf("com num: %d\n", availableCommandsCount);
             return SUCCESS;
         }
         printf("\nWrong password.\n1 - Register\n2 - Try again\n\n");
@@ -364,6 +355,7 @@ int registerUser() {
     fclose(file);
     strcpy(username, login);
     printf("Register succeeded!\n\n");
+    availableCommandsCount = -1;
     return SUCCESS;
 }
 
@@ -401,6 +393,33 @@ int welcome() {
     return SUCCESS;
 }
 
+int imposeSanctions(int lineNum, int commandsCnt) {
+    FILE *file = fopen("userData.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
+
+    if (file == NULL || temp == NULL) {
+        return FILE_FAILURE;
+    }
+
+    char login[128], password[128];
+    int number;
+    int curLine = 0;
+
+    while (fscanf(file, "%s %s %d", login, password, &number) == 3) {
+        curLine++;
+        if (curLine == lineNum) {
+            number = commandsCnt;
+        }
+        fprintf(temp, "%s %s %d\n", login, password, number);
+    }
+    fclose(file);
+    fclose(temp);
+
+    remove("userData.txt");
+    rename("temp.txt", "userData.txt");
+    return SUCCESS;
+}
+
 int readCommand(time_t* arg) {
     char com[40];
     int comNum = 0;
@@ -409,18 +428,24 @@ int readCommand(time_t* arg) {
         fgets(com, sizeof(com), stdin);
         com[strcspn(com, "\n")] = '\0';
 
-        //printf("Com: <%s>\n", com);
+        if (strcmp(com, "Logout") == 0) {
+            comNum = 4;
+            break;
+        }
+
+        if (availableCommandsCount == 0) {
+            printf("You have no commands left. You can only log out.\n%s$ ", username);
+            continue;
+        }
 
         if (strcmp(com, "Time") == 0) {
             comNum = 1;
+            availableCommandsCount--;
             break;
         }
         if (strcmp(com, "Date") == 0) {
             comNum = 2;
-            break;
-        }
-        if (strcmp(com, "Logout") == 0) {
-            comNum = 4;
+            availableCommandsCount--;
             break;
         }
         if (contains(com, "Howmuch")) {
@@ -438,18 +463,22 @@ int readCommand(time_t* arg) {
 
             if (hasFlag(com, "-s")) {
                 comNum = 5;
+                availableCommandsCount--;
                 break;
             }
             if (hasFlag(com, "-m")) {
                 comNum = 6;
+                availableCommandsCount--;
                 break;
             }
             if (hasFlag(com, "-h")) {
                 comNum = 7;
+                availableCommandsCount--;
                 break;
             }
             if (hasFlag(com, "-y")) {
                 comNum = 8;
+                availableCommandsCount--;
                 break;
             }
             printf("%s$ <Howmuch> must have valid flag: -s, -m, -h, -y.\n%s$ ", username, username);
@@ -478,26 +507,47 @@ int readCommand(time_t* arg) {
                 }
                 login[j++] = com[i++];
             }
+            login[j] = '\0';
             if (error) {
                 continue;
             }
             i++;
+            int cnt = 0;
             while (com[i] != '\0') {
-                // if (com[i] == '\0') {
-                //     printf("Invalid command syntax. Expected: Sanctions username <number>.\n%s$ ", username);
-                //     error = 1;
-                //     break;
-                // }
                 if (!isdigit(com[i])) {
                     error = 1;
                     break;
                 }
                 commandsCnt = commandsCnt * 10 + com[i++] - '0';
+                cnt++;
+            }
+            if (cnt == 0) {
+                printf("Invalid command syntax. Expected: Sanctions username <number>.\n%s$ ", username);
+                continue;
             }
             if (error) {
                 continue;
             }
-            printf("<%s> - %d\n\n", login, commandsCnt);
+
+            if (strcmp(login, username) == 0) {
+                printf("It is not allowed to impose sanctions on yourself.\n%s$ ", username);
+                continue;
+            }
+
+            int code = isUserAlreadyRegistered(login);
+            if (code == LOGIN_NOT_FOUND) {
+                printf("Login <%s> doesn't exist.\n%s$ ", login, username);
+                continue;
+            }
+
+            code = imposeSanctions(code, commandsCnt);
+            if (code != SUCCESS) {
+                validateCode(code);
+                continue;
+            }
+            availableCommandsCount--;
+            printf("Sanctions were successfully imposed.\n\n");
+            break;
         }
         else {
             printf("%s$ <%s> is not a command\n%s$ ", username, com, username);
