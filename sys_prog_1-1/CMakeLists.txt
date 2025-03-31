@@ -1,0 +1,1 @@
+add_executable(sys_prog_1-1 lab1.c)

@@ -1,1 +1,0 @@
-add_executable(4_sem_SP_1 lab1.c)
