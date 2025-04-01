@@ -1,7 +1,21 @@
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <pthread.h>
+
+int simplePow(int num, int exp) {
+    int result = 1;
+    for (int i = 0; i < exp; i++) {
+        result *= num;
+    }
+    return result;
+}
 
 enum {
-    INVALID_FLAG = -2,
+    THREAD_CREATION_ERROR = -4,
+    MALLOC_FAIL,
+    INVALID_FLAG,
     WRONG_NUMBER_OF_ARGUMENTS,
     SUCCESS,
     xor,
@@ -53,6 +67,36 @@ int containsFlag(const char *arg) {
     return INVALID_FLAG;
 }
 
+void *threadXOR(void *arg) {
+    char *file_path = (char*)arg;
+    printf("%s\n", file_path);
+    return NULL;
+}
+
+int funcXOR(char *arg[], int fileCnt, int N) {
+    int bytesCnt = simplePow(2, N) / 8;
+    printf("%d\n", bytesCnt);
+
+    pthread_t *thr_ids = (pthread_t*)malloc(fileCnt * sizeof(pthread_t));
+    if (thr_ids == NULL) {
+        printf("malloc failed\n");
+        return MALLOC_FAIL;
+    }
+
+    for (int i = 0; i < fileCnt; i++) {
+        //printf("%s\n", arg[i]);
+        pthread_t thr_id = 0;
+        if (pthread_create(&thr_id, NULL, &threadXOR, (void*)arg[i]) != 0) {
+            printf("Thread creation error");
+            return THREAD_CREATION_ERROR;
+        }
+        printf("Thread %d created\n", i);
+    }
+
+    free(thr_ids);
+    return SUCCESS;
+}
+
 int main(const int argc, char *argv[]) {
     if (argc < 3) {
         printf("Provide file paths and a flag.\n\n");
@@ -83,6 +127,11 @@ int main(const int argc, char *argv[]) {
             printf("Invalid flag.\nParameter of flag xor must be a number 2-6 only.\n");
             return INVALID_FLAG;
         }
+
+        int ret = funcXOR(++argv, argc - 2, N);
+        if (ret != SUCCESS) {
+            return code;
+        }
     }
 
     else if (code == mask) {
@@ -111,9 +160,87 @@ int main(const int argc, char *argv[]) {
         buf[i] = '\0';
         printf("<%s>\n", buf);
         N = toInt(buf, 16);
+        if (N == -1) {
+            printf("Invalid argument to flag <mask>.\nArgument must be a hex number only.\n");
+            return INVALID_FLAG;
+        }
     }
 
+    else if (code == copy) {
+        char *p = argv[argc - 1];
+        p += 4;
+        if (*p == '\0') {
+            printf("Invalid argument to flag <copy>.\nArgument must be a decimal number.\n");
+            return INVALID_FLAG;
+        }
+        char buf[4];
+        int i = 0;
+        while (*p != '\0') {
+            if (i >= 3) {
+                printf("The argument of flag <copy> must be under 1000.\n");
+                return INVALID_FLAG;
+            }
+            if (!isdigit(*p)) {
+                printf("The argument of flag <copy> must be a decimal number.\n");
+                return INVALID_FLAG;
+            }
+            buf[i] = *p;
+            i++;
+            p++;
+        }
+        buf[i] = '\0';
+        N = toInt(buf, 10);
+    }
 
-    printf("N - %d\n", N);
+    else if (code == find) {
+        char *p = argv[argc - 1];
+        p += 4;
+        if (*p != '<') {
+            printf("Invalid flag.\nCorrect usage: find<SomeString>\n");
+            return INVALID_FLAG;
+        }
+        p++;
+        int size = 16;
+        pattern = (char*)malloc(size * sizeof(char));
+        if (pattern == NULL) {
+            printf("Memory allocation failed.\n");
+            return MALLOC_FAIL;
+        }
+        int i = 0;
+        while (*p != '>') {
+            if (*p == '\0') {
+                printf("Invalid flag.\nCorrect usage: find<SomeString>\n");
+                free(pattern);
+                return INVALID_FLAG;
+            }
+
+            if (i == (size - 1)) {
+                size = size * 2;
+                char *p = realloc(pattern, size);
+                if (p == NULL) {
+                    printf("Memory allocation failed.\n");
+                    free(pattern);
+                    return MALLOC_FAIL;
+                }
+                pattern = p;
+                printf("reallocated!\n");
+            }
+
+            pattern[i] = *p;
+            i++;
+            p++;
+        }
+        pattern[i] = '\0';
+    }
+
+    if (pattern != NULL) {
+        printf("pattern: (%s)\n", pattern);
+    }
+    printf("N: %d\n", N);
+
+
+    if (pattern != NULL) {
+        free(pattern);
+    }
     return 0;
 }
