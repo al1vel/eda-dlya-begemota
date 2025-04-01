@@ -13,7 +13,8 @@ int simplePow(int num, int exp) {
 }
 
 enum {
-    THREAD_CREATION_ERROR = -4,
+    FILE_OPEN_FAILURE = -5,
+    THREAD_CREATION_ERROR,
     MALLOC_FAIL,
     INVALID_FLAG,
     WRONG_NUMBER_OF_ARGUMENTS,
@@ -22,6 +23,12 @@ enum {
     mask,
     copy,
     find
+};
+
+struct xorThreadData {
+    char *file_path;
+    int bytesCnt;
+    long long xor_result;
 };
 
 int contains(const char *str, const char* substr) {
@@ -67,15 +74,23 @@ int containsFlag(const char *arg) {
     return INVALID_FLAG;
 }
 
-void *threadXOR(void *arg) {
-    char *file_path = (char*)arg;
-    printf("%s\n", file_path);
+void* threadXOR(void *arg) {
+    struct xorThreadData *data = (struct xorThreadData*)arg;
+    printf("%s - %d\n", data->file_path, data->bytesCnt);
+    FILE* file = fopen(data->file_path, "r");
+    if (file == NULL) {
+        data->xor_result = FILE_OPEN_FAILURE;
+    } else {
+        int result;
+        int size = data->bytesCnt == 0 ? 1 : data->bytesCnt;
+        char buffer[size];
+
+    }
     return NULL;
 }
 
 int funcXOR(char *arg[], int fileCnt, int N) {
     int bytesCnt = simplePow(2, N) / 8;
-    printf("%d\n", bytesCnt);
 
     pthread_t *thr_ids = (pthread_t*)malloc(fileCnt * sizeof(pthread_t));
     if (thr_ids == NULL) {
@@ -83,14 +98,28 @@ int funcXOR(char *arg[], int fileCnt, int N) {
         return MALLOC_FAIL;
     }
 
+    struct xorThreadData data[fileCnt];
+
     for (int i = 0; i < fileCnt; i++) {
-        //printf("%s\n", arg[i]);
         pthread_t thr_id = 0;
-        if (pthread_create(&thr_id, NULL, &threadXOR, (void*)arg[i]) != 0) {
+        data[i].file_path = arg[i];
+        data[i].bytesCnt = bytesCnt;
+        if (pthread_create(&thr_id, NULL, &threadXOR, &data[i]) != 0) {
             printf("Thread creation error");
             return THREAD_CREATION_ERROR;
         }
-        printf("Thread %d created\n", i);
+        //printf("Thread %d created\n", i);
+        thr_ids[i] = thr_id;
+    }
+
+    for (int i = 0; i < fileCnt; i++) {
+        pthread_join(thr_ids[i], NULL);
+        if (data[i].xor_result == FILE_OPEN_FAILURE) {
+            printf("File open failure.\n");
+            free(thr_ids);
+            return FILE_OPEN_FAILURE;
+        }
+        printf("xor%d result of file %s: %lld\n", N, data[i].file_path, data[i].xor_result);
     }
 
     free(thr_ids);
