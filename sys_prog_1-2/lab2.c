@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <pthread.h>
+#include <stdint.h>
 
 int simplePow(int num, int exp) {
     int result = 1;
@@ -28,7 +29,7 @@ enum {
 struct xorThreadData {
     char *file_path;
     int bytesCnt;
-    long long xor_result;
+    uint64_t xor_result;
 };
 
 int contains(const char *str, const char* substr) {
@@ -77,15 +78,42 @@ int containsFlag(const char *arg) {
 void* threadXOR(void *arg) {
     struct xorThreadData *data = (struct xorThreadData*)arg;
     printf("%s - %d\n", data->file_path, data->bytesCnt);
-    FILE* file = fopen(data->file_path, "r");
+    FILE* file = fopen(data->file_path, "rb");
     if (file == NULL) {
         data->xor_result = FILE_OPEN_FAILURE;
-    } else {
-        int result;
-        int size = data->bytesCnt == 0 ? 1 : data->bytesCnt;
-        char buffer[size];
-
+        return NULL;
     }
+
+    uint64_t result = 0;
+    size_t size = data->bytesCnt == 0 ? 1 : data->bytesCnt;
+    uint8_t buffer[size];
+
+    size_t bytesRead = fread(buffer, 1, size, file);
+    if (bytesRead == 0) {
+        data->xor_result = 0;
+        return NULL;
+    }
+
+    if (data->bytesCnt == 0) {
+        result = (buffer[0] >> 4) & 0xF0;
+        result = result ^ (buffer[0] & 0x0F);
+    } else {
+        uint64_t block = 0;
+        for (int i = 0; i < size; ++i) {
+            block = block << 8;
+            block = buffer[i];
+        }
+        result = block;
+    }
+
+    while ((bytesRead = fread(buffer, 1, size, file)) > 0) {
+        for (size_t i = 0; i < bytesRead; i++) {
+            printf("%d ", buffer[i]);
+        }
+        printf("\n");
+    }
+    fclose(file);
+    data->xor_result = result;
     return NULL;
 }
 
@@ -119,7 +147,7 @@ int funcXOR(char *arg[], int fileCnt, int N) {
             free(thr_ids);
             return FILE_OPEN_FAILURE;
         }
-        printf("xor%d result of file %s: %lld\n", N, data[i].file_path, data[i].xor_result);
+        printf("xor%d result of file %s: %ld\n", N, data[i].file_path, data[i].xor_result);
     }
 
     free(thr_ids);
