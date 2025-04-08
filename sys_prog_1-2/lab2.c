@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
 
 int simplePow(int num, int exp) {
     int result = 1;
@@ -13,6 +17,8 @@ int simplePow(int num, int exp) {
 }
 
 enum {
+    PROCESS_DIED = -8,
+    FORK_FAILURE = -7,
     INVALID_NUMBER = -6,
     FILE_OPEN_FAILURE = -5,
     THREAD_CREATION_ERROR,
@@ -247,6 +253,93 @@ int funcMASK(char *arg[], int fileCnt, int mask) {
     return SUCCESS;
 }
 
+size_t determineNumLength(int num) {
+    size_t len = 0;
+    while (num != 0) {
+        num = num / 10;
+        len++;
+    }
+    return len;
+}
+
+void createName(char *name, int num, char *res) {
+    char buf[determineNumLength(num)];
+    int k = 0, temp = num;
+    while (temp != 0) {
+        buf[k] = (temp % 10) + '0';
+        temp /= 10;
+        k++;
+    }
+
+    int i = 0, pos = 0;
+    while (name[i] != '.') {
+        res[i] = name[i];
+        i++;
+        pos = i;
+    }
+    for (int j = (int)determineNumLength(num) - 1; j >= 0; --j) {
+        res[i] = buf[j];
+        i++;
+    }
+    while (name[pos] != '\0') {
+        res[i] = name[pos];
+        i++;
+        pos++;
+    }
+    res[i] = '\0';
+}
+
+int funcCOPY(char *arg[], int fileCnt, int N) {
+    pid_t pids[fileCnt];
+
+    for (int i = 0; i < fileCnt; i++) {
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            printf("fork failed\n");
+            return FORK_FAILURE;
+        }
+
+        else if (pid == 0) {
+            printf("%s - %d\n", arg[i], N);
+
+            FILE *input = fopen(arg[i], "rb");
+            if (input == NULL) {
+                printf("File %s open failed.\n", arg[i]);
+                exit(-1);
+            }
+
+            for (int k = 0; k < N; k++) {
+                size_t len = strlen(arg[i]);
+                len += determineNumLength(k + 1);
+                char buf[len + 1];
+                createName(arg[i], k + 1, buf);
+                printf("buf: %s\n", buf);
+            }
+            fclose(input);
+            exit(0);
+
+        } else {
+            pids[i] = pid;
+        }
+    }
+    for (int i = 0; i < fileCnt; i++) {
+        int status;
+        waitpid(pids[i], &status, 0);
+
+        if (WIFEXITED(status)) {
+            int exit_code = WEXITSTATUS(status);
+            if (exit_code != SUCCESS) {
+                return FILE_OPEN_FAILURE;
+            }
+        } else {
+            printf("Abnormal process finish.\n");
+            return PROCESS_DIED;
+        }
+    }
+    return SUCCESS;
+}
+
 int main(const int argc, char *argv[]) {
     if (argc < 3) {
         printf("Provide file paths and a flag.\n\n");
@@ -345,6 +438,12 @@ int main(const int argc, char *argv[]) {
         }
         buf[i] = '\0';
         N = toInt(buf, 10);
+
+        int ret = funcCOPY(++argv, argc - 2, N);
+        if (ret != SUCCESS) {
+            printf("Finishing with code: %d\n", ret);
+            return code;
+        }
     }
 
     else if (code == find) {
