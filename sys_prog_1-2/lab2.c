@@ -303,26 +303,93 @@ int funcCOPY(char *arg[], int fileCnt, int N) {
         else if (pid == 0) {
             printf("%s - %d\n", arg[i], N);
 
-            FILE *input = fopen(arg[i], "rb");
-            if (input == NULL) {
-                printf("File %s open failed.\n", arg[i]);
-                exit(-1);
-            }
-
             for (int k = 0; k < N; k++) {
+                FILE *input = fopen(arg[i], "rb");
+                if (input == NULL) {
+                    printf("File %s open failed.\n", arg[i]);
+                    exit(-1);
+                }
+
                 size_t len = strlen(arg[i]);
                 len += determineNumLength(k + 1);
                 char buf[len + 1];
                 createName(arg[i], k + 1, buf);
                 printf("buf: %s\n", buf);
+
+                FILE* out = fopen(buf, "wb");
+                if (out == NULL) {
+                    printf("File %s write failed.\n", buf);
+                    exit(-1);
+                }
+
+                char buffer[4096];
+                size_t bytes;
+                while ((bytes = fread(buffer, 1, sizeof(buffer), input)) > 0) {
+                    fwrite(buffer, 1, bytes, out);
+                }
+                fclose(out);
+                fclose(input);
             }
-            fclose(input);
             exit(0);
 
         } else {
             pids[i] = pid;
         }
     }
+    for (int i = 0; i < fileCnt; i++) {
+        int status;
+        waitpid(pids[i], &status, 0);
+
+        if (WIFEXITED(status)) {
+            int exit_code = WEXITSTATUS(status);
+            if (exit_code != SUCCESS) {
+                return FILE_OPEN_FAILURE;
+            }
+        } else {
+            printf("Abnormal process finish.\n");
+            return PROCESS_DIED;
+        }
+    }
+    return SUCCESS;
+}
+
+int funcFIND(char *arg[], int fileCnt, char *pattern) {
+    pid_t pids[fileCnt];
+
+    for (int i = 0; i < fileCnt; i++) {
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            printf("fork failed\n");
+            return FORK_FAILURE;
+        }
+
+        else if (pid == 0) {
+            FILE *input = fopen(arg[i], "r");
+            if (input == NULL) {
+                printf("File %s open failed.\n", arg[i]);
+                exit(-1);
+            }
+
+            char buffer[4096];
+            size_t bytes;
+            while ((bytes = fread(buffer, 1, sizeof(buffer), input)) > 0) {
+                char *p = strstr(buffer, pattern);
+                if (p != NULL) {
+                    printf("File %s contains provided pattern.\n", arg[i]);
+                } else {
+                    printf("File %s does not contain pattern.\n", arg[i]);
+                }
+            }
+            fclose(input);
+            exit(0);
+        }
+
+        else {
+            pids[i] = pid;
+        }
+    }
+
     for (int i = 0; i < fileCnt; i++) {
         int status;
         waitpid(pids[i], &status, 0);
@@ -352,7 +419,6 @@ int main(const int argc, char *argv[]) {
         printf("Invalid flag.\nAvailable flags:\n  xorN\n  mask<hex>\n  copyN\n  find<SomeString>\n\n");
         return code;
     }
-    printf("flag - %d\n", code);
 
     int N = -1;
     char *pattern = NULL;
@@ -485,12 +551,14 @@ int main(const int argc, char *argv[]) {
             p++;
         }
         pattern[i] = '\0';
-    }
 
-    if (pattern != NULL) {
-        printf("pattern: (%s)\n", pattern);
+        int ret = funcFIND(++argv, argc - 2, pattern);
+        if (ret != SUCCESS) {
+            printf("Finishing with code: %d\n", ret);
+            free(pattern);
+            return code;
+        }
     }
-
 
     if (pattern != NULL) {
         free(pattern);
